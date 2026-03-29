@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <string>
 
 struct Tile {
-	char letter;
+	std::string letter;
 	int value;
 };
 

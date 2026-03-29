@@ -2,9 +2,11 @@
 #include "board.h"
 #include "player.h"
 #include <windows.h>
+#include <iostream>
 
 int main() {
-	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleOutputCP(65001);
+	SetConsoleCP(65001);
 	board board;
 	player player;
 	Bag bag("config_de.txt");

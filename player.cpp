@@ -1,4 +1,5 @@
 #include "player.h"
+#include <windows.h>
 
 void player::drawTiles(Bag& bag) {
 	while (hand.size() < MAX_HAND && !bag.isEmpty()) {
@@ -17,7 +18,10 @@ void player::displayHand() const {
 	std::cout << std::endl;
 	std::cout << "      ";
 	for (const auto& tile : hand) {
-		std::cout << "|   " << tile.value << "| ";
+		if(tile.value <10) {
+			std::cout << "|   " << tile.value << "| ";
+		}
+		else { std::cout << "|  " << tile.value << "| "; }
 	}
 	std::cout << std::endl;
 

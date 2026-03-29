@@ -9,7 +9,6 @@ private:
 	std::vector<Tile> hand;
 	const size_t MAX_HAND = 8;
 public:
-	player();
 	void drawTiles(Bag& bag);
 	void displayHand() const;
 };

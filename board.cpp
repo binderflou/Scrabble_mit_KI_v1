@@ -1,5 +1,6 @@
 #include "board.h"
 #include <iostream>
+#include <windows.h>
 #define NORMAL "\033[0m"
 #define RED "\033[31m"
 #define BLUE "\033[34m"
@@ -85,7 +86,10 @@ void board::display() const {
 
 		for(int j = 0; j < 15; j++) {
 			if (area[i][j].tile) {
-				std::cout << "|   " << area[i][j].tile->value << "|";
+				if (area[i][j].tile->value < 10) {
+					std::cout << "|   " << area[i][j].tile->value << "|";
+				}
+				else { std::cout << "|  " << area[i][j].tile->value << "|"; }
 			}
 			else {
 				bonus_down(area[i][j].bonus);

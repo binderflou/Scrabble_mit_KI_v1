@@ -10,7 +10,7 @@ Bag::Bag(const std::string& configPath) {
 		return;
 	}
 
-	char letter;
+	std::string letter;
 	int value, count;
 
 	while (file >> letter >> value >> count) {

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "tile.h"
 
 enum class Bonus {NONE, DL, DW, TL, TW};
