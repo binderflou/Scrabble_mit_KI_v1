@@ -13,6 +13,8 @@ class Bag {
 	public:
 		Bag(const std::string& configPath);
 		bool isEmpty() const;
+		void shuffle();
 		Tile drawTile();
+		void putBackTile(const Tile& tile);
 };
 

@@ -7,7 +7,7 @@
 #define LIGHTBLUE "\033[94m"
 #define LIGHTRED "\033[91m"
 
-board::board() {
+Board::Board() {
 	area[0][0].bonus = Bonus::TW;
 	area[0][3].bonus = Bonus::DL;
 	area[0][7].bonus = Bonus::TW;
@@ -69,9 +69,10 @@ board::board() {
 	area[14][7].bonus = Bonus::TW;
 	area[14][11].bonus = Bonus::DL;
 	area[14][14].bonus = Bonus::TW;
+
 }
 
-void board::display() const {
+void Board::display() const {
 	std::cout << "------------------------------------------------------------------------------------------\n";
 	for (int i = 0; i < 15; i++) {
 		for (int j = 0; j < 15; j++) {
@@ -100,7 +101,7 @@ void board::display() const {
 	}
 }
 
-void board::bonus_up(Bonus bonus) const{
+void Board::bonus_up(Bonus bonus) const{
 	switch (bonus) {
 	case Bonus::DL: std::cout << "|" << LIGHTBLUE << "D   " << NORMAL << "|"; break;
 	case Bonus::DW: std::cout << "|" << LIGHTRED << "D   " << NORMAL << "|"; break;
@@ -110,7 +111,7 @@ void board::bonus_up(Bonus bonus) const{
 	}
 }
 
-void board::bonus_down(Bonus bonus) const{
+void Board::bonus_down(Bonus bonus) const{
 	switch (bonus) {
 	case Bonus::DL: std::cout << "|" << LIGHTBLUE << "   L" << NORMAL << "|"; break;
 	case Bonus::DW: std::cout << "|" << LIGHTRED << "   W" << NORMAL << "|"; break;

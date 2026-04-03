@@ -27,6 +27,9 @@
     <ClCompile Include="tile.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="board.h">
@@ -36,6 +39,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="tile.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,11 +8,11 @@ struct Square {
 	Bonus bonus = Bonus::NONE;
 };
 
-class board {
+class Board {
 	private:
 		Square area[15][15];
 	public:
-		board();
+		Board();
 		void display() const;
 		void bonus_up(Bonus bonus) const;
 		void bonus_down(Bonus bonus) const;

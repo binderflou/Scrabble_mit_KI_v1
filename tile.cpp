@@ -21,6 +21,14 @@ Bag::Bag(const std::string& configPath) {
 
 	file.close();
 
+	shuffle();
+}
+
+bool Bag::isEmpty() const {
+	return tiles.empty();
+}
+
+void Bag::shuffle() {
 	std::random_device rd;
 	std::mt19937 g(rd());
 	std::shuffle(tiles.begin(), tiles.end(), g);
@@ -34,7 +42,6 @@ Tile Bag::drawTile() {
 	tiles.pop_back();
 	return tile;
 }
-
-bool Bag::isEmpty() const {
-	return tiles.empty();
+void Bag::putBackTile(const Tile& tile) {
+	tiles.push_back(tile);
 }
