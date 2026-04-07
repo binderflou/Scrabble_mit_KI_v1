@@ -17,5 +17,6 @@ class Board {
 		void bonus_up(Bonus bonus) const;
 		void bonus_down(Bonus bonus) const;
 		bool placeTile(Tile* tile, int x, int y);
+		bool isEmpty(int x, int y) const;
 };
 

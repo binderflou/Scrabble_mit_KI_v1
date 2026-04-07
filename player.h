@@ -21,5 +21,6 @@ public:
 	void drawTiles(Bag& bag);
 	void putBackTile(Bag& bag, std::string letter);
 	void displayHand() const;
+	bool hasTile(std::string letter) const;
 };
 

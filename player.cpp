@@ -47,7 +47,12 @@ void Player::putBackTile(Bag& bag, std::string letter) {
 void Player::displayHand() const {
 	std::cout << "\n";
 	std::cout << m_name << ":\n";
-	std::cout << "------ ------ ------ ------ ------ ------ ------ ------ " << std::endl;
+	for (const auto& tile : m_hand) {
+		std::cout << "------ ";
+	}
+	std::cout << std::endl;
+
+	//std::cout << "------ ------ ------ ------ ------ ------ ------ ------ " << std::endl;
 	//std::cout << "      ";
 	for (const auto& tile : m_hand) {
 		std::cout << "|" << tile.letter << "   | ";
@@ -62,6 +67,19 @@ void Player::displayHand() const {
 	}
 	std::cout << std::endl;
 
+	for (const auto& tile : m_hand) {
+		std::cout << "------ ";
+	}
+	std::cout << std::endl;
 	//std::cout << "      ";
-	std::cout << "------ ------ ------ ------ ------ ------ ------ ------ " << std::endl;
+	//std::cout << "------ ------ ------ ------ ------ ------ ------ ------ " << std::endl;
+}
+
+bool Player::hasTile(std::string letter) const {
+	for (const auto& tile : m_hand) {
+		if (tile.letter == letter) {
+			return true;
+		}
+	}
+	return false;
 }

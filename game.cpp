@@ -1,6 +1,9 @@
 #include <random>
 #include <thread>
 #include <chrono>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "game.h"
 
@@ -12,13 +15,13 @@ Game::Game(int numberOfPlayers, std::string language)
 	std::string input;
 	std::cin.ignore(); //vorheriges enter abfangen
 
-	//Name für die Spieler vergeben
+	//Name fÃ¼r die Spieler vergeben
 	for (int i = 1; i <= m_numberOfPlayers; i++) {
 
 		if (i == 1)
 			system("cls");
 
-		//Name für den i. Player eingeben
+		//Name fÃ¼r den i. Player eingeben
 		std::cout << "Name Spieler " << i << ":";
 
 		std::getline(std::cin, input); //liest komplette Zeile, cin nur bis zum ersten Leerzeichen
@@ -89,7 +92,7 @@ void Game::scoring() {
 
 	system("cls");
 
-	//Auswertung möglich
+	//Auswertung mÃ¶glich
 	if (m_players.empty())
 	{
 		std::cout << "Keine Spieler vorhanden\n";
@@ -127,7 +130,7 @@ void Game::getFirstPlayer() {
 		_tickets.clear();
 
 		//Jeder Spieler zieht einen Stein
-		std::cout << "Wer beginnt? Der Startspieler wird ausgelost…\n";
+		std::cout << "Wer beginnt? Der Startspieler wird ausgelostâ€¦\n";
 		for (int i = 0; i < m_numberOfPlayers; i++) {
 			std::cout << m_players[i].getName() << " zieht einen Stein aus dem Beutel..";
 			_tickets.push_back(m_bag.drawTile());
@@ -135,7 +138,7 @@ void Game::getFirstPlayer() {
 			std::cout << _tickets[i].letter << " " << _tickets[i].value << "\n";
 		}
 
-		//Auswertung gezogene Spielsteine auf höchsten Buchstabenwert
+		//Auswertung gezogene Spielsteine auf hÃ¶chsten Buchstabenwert
 		int _max = _tickets[0].value;
 		m_activePlayer = 0;
 		_valid = true;
@@ -163,7 +166,7 @@ void Game::getFirstPlayer() {
 			system("cls");
 		}
 
-		//Gezogene Steine zurücklegen
+		//Gezogene Steine zurÃ¼cklegen
 		for (int i = 0; i < m_numberOfPlayers; i++) {
 			m_bag.putBackTile(_tickets[i]);
 		}
@@ -180,11 +183,11 @@ int Game::draw() {
 
 	int _input = 0;
 
-	//To-Do Logik für Zug schreiben
-	//int als return für die unterschiedlichen Möglichkeiten für einen Zug
+	//To-Do Logik fÃ¼r Zug schreiben
+	//int als return fÃ¼r die unterschiedlichen MÃ¶glichkeiten fÃ¼r einen Zug
 	// 0 = aussetzen
 	// 1 = Spielsteine tauschen
-	// 2 = regulärer Zug
+	// 2 = regulÃ¤rer Zug
 	//-1 = Spiel beenden
 
 	//Anzeige UI
@@ -192,7 +195,7 @@ int Game::draw() {
 	m_board.display();
 	m_players[m_activePlayer].displayHand();
 
-	std::cout << "____Aktion wählen____\n";
+	std::cout << "____Aktion wÃ¤hlen____\n";
 	std::cout << "0 = aussetzen\n";
 	std::cout << "1 = Spielsteine tauschen\n";
 	std::cout << "2 = Wort legen\n";
@@ -211,10 +214,10 @@ int Game::draw() {
 			std::string _inputString;
 			std::cout << "____Welche Steine sollen getauscht werden:____\n";
 			std::cout << "Eingabe ohne Leerzeichen!\n";
-			std::cout << "mit 'Enter' abschließen\n";
+			std::cout << "mit 'Enter' abschlieÃŸen\n";
 			std::cin >> _inputString;
 
-			//Bausteine aus der Hand entfernen und in den Betuel zurücklegen
+			//Bausteine aus der Hand entfernen und in den Betuel zurÃ¼cklegen
 			for (int i = 0; i < _inputString.size(); i++) {
 				std::string letter(1, _inputString[i]);
 				m_players[m_activePlayer].putBackTile(m_bag, letter);
@@ -233,7 +236,108 @@ int Game::draw() {
 	}
 
 	//2 = Zug konfigurieren
-	if (_input == 2) {	}
+	if (_input == 2) {
+		bool done = false;
+		Player* player = &m_players[m_activePlayer];
+
+		while (!done) {
+			system("cls");
+			m_board.display();
+			m_players[m_activePlayer].displayHand();
+			std::string _inputString;
+			std::cout << "Zug konfigurieren im Format: Buchstabe,Spalte,Zeile\n";
+			std::cout << "0 um zu Beenden\n";
+			std::getline(std::cin >> std::ws, _inputString);
+			_inputString.erase(std::remove(_inputString.begin(), _inputString.end(), ' '), _inputString.end());
+			std::stringstream ss(_inputString);
+			std::string part;
+			std::vector<std::string> partvector;
+
+			if(_inputString == "0") {
+				done = true;
+				continue;
+			}
+
+			while (std::getline(ss, part, ',')) {
+				partvector.push_back(part);
+			}
+			if (partvector.size() != 3) {
+				std::cout << "UngÃ¼ltige Eingabe, bitte erneut versuchen.\n";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				return 2;
+			}
+			else {
+				std::string letter = partvector[0];
+				std::string colStr = partvector[1];
+				std::string rowStr = partvector[2];
+
+				int row = -1;
+				int col = -1;
+				char colChar;
+
+				//Umrechnen fÃ¼r weitere Logik
+				try {
+					row = std::stoi(partvector[2]) - 1;
+
+					if (std::isdigit(colStr[0])) {
+						throw std::invalid_argument("Spalte muss ein Buchstabe sein");
+					}
+					colChar = std::toupper(colStr[0]);
+					int col = colChar - 'A';
+				}
+				catch (...){
+					std::cout << "UngÃ¼ltige Eingabe, bitte Format beachten: Buchstabe, Buchstabe, Zahl.\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+
+				std::string letterUpper;
+				if (letter == "_") {
+					letterUpper = "_";
+				}
+				else if (letter == "Ã„" || letter == "Ã¤") {
+					letterUpper = "Ã„";
+				}
+				else if (letter == "Ã–" || letter == "Ã¶") {
+					letterUpper = "Ã–";
+				}
+				else if (letter == "Ãœ" || letter == "Ã¼") {
+					letterUpper = "Ãœ";
+				}
+				else {
+					letterUpper = std::toupper(letter[0]);
+				}
+
+				std::string validLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÃ„Ã–Ãœ_";
+				bool isLetterValid = letter.length() > 0 && validLetters.find(letterUpper) != std::string::npos;
+
+				if (!isLetterValid || col < 0 || col > 14 || row < 0 || row > 14) {
+					std::cout << "Buchstabe, Reihe oder Spalte ungÃ¼ltig.\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+				else if (!m_players[m_activePlayer].hasTile(letterUpper)) {
+					std::cout << "Du hast diesen Buchstaben nicht!\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+				else if (!m_board.isEmpty(row, col) ) {
+					std::cout << "Dieses Feld ist bereits belegt!\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+				else {
+					Tile* tilePtr = new Tile(player->takeTile(letterUpper));
+					m_board.placeTile(tilePtr, row, col);
+					std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
+					std::cout << "NÃ¤chster Zug...\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+				}
+			}
+		}
+		m_players[m_activePlayer].drawTiles(m_bag);
+		return 0;
+	}
 	
 	//3 = Spiel beenden
 	if (_input == 3) {
@@ -242,14 +346,14 @@ int Game::draw() {
 	
 }
 bool Game::checkDraw() {
-	//To-Do Logik für Zugauswertung + Punkteberechnung
-	//int als return für die anzahl an erzielten Punken
-	//zug gültig = true; (Züge mit 0 und 1 sind immer gültig)
-	//zug ungültig = false;
+	//To-Do Logik fÃ¼r Zugauswertung + Punkteberechnung
+	//int als return fÃ¼r die anzahl an erzielten Punken
+	//zug gÃ¼ltig = true; (ZÃ¼ge mit 0 und 1 sind immer gÃ¼ltig)
+	//zug ungÃ¼ltig = false;
 
-	//Steine richtig gelegt -> eine Linie horizontal oder vertikal + vollständigkeit (keine Lücken)
+	//Steine richtig gelegt -> eine Linie horizontal oder vertikal + vollstÃ¤ndigkeit (keine LÃ¼cken)
 
-	//Wortkombninationen, die sich zusätzlich noch ergeben  
+	//Wortkombninationen, die sich zusÃ¤tzlich noch ergeben  
 
 
 	//Gelegtes Wort bekannt/neu? -> Funktion: Wort in Datenbank aufnehmen

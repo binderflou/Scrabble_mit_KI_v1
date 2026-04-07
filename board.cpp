@@ -73,8 +73,10 @@ Board::Board() {
 }
 
 void Board::display() const {
-	std::cout << "------------------------------------------------------------------------------------------\n";
+	std::cout << "     A     B     C     D     E     F     G     H     I     J     K     L     M     N     O\n";
+	std::cout << "   ------------------------------------------------------------------------------------------\n";
 	for (int i = 0; i < 15; i++) {
+		printf("%2d ",  i + 1);
 		for (int j = 0; j < 15; j++) {
 			if (area[i][j].tile) {
 				std::cout << "|" << area[i][j].tile->letter << "   |";
@@ -85,6 +87,7 @@ void Board::display() const {
 		}
 		std::cout << "\n";
 
+		std::cout << "   ";
 		for(int j = 0; j < 15; j++) {
 			if (area[i][j].tile) {
 				if (area[i][j].tile->value < 10) {
@@ -97,7 +100,7 @@ void Board::display() const {
 			}
 		}
 		std::cout << "\n";
-		std::cout << "------------------------------------------------------------------------------------------\n";
+		std::cout << "   ------------------------------------------------------------------------------------------\n";
 	}
 }
 
@@ -119,4 +122,16 @@ void Board::bonus_down(Bonus bonus) const{
 	case Bonus::TW: std::cout << "|" << RED << "   W" << NORMAL << "|"; break;
 	default: std::cout << "|    |"; break;
 	}
+}
+
+bool Board::placeTile(Tile* tile, int x, int y) {
+	if (Board::isEmpty(x, y)) {
+		area[x][y].tile = tile;
+		return true;
+	}
+	return false;
+}
+
+bool Board::isEmpty(int x, int y) const {
+	return area[x][y].tile == nullptr;
 }
