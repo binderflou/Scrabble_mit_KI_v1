@@ -25,7 +25,7 @@ class Game
 	std::string m_language = "config_de.txt";
 	Bag m_bag;
 	Board m_board;
-	std::vector<Player> m_players;
+	
 
 	//Zug-Eigenschaften
 	RunCase m_runCase = RunCase::GetFirstPlayer;
@@ -34,6 +34,7 @@ class Game
 	std::vector<Placement> m_drawPlacements; //Zuordnung vom Baustein zum den koordinaten
 
 public:
+	std::vector<Player> m_players;
 	Game(int numberOfPlayers, std::string language);
 	void run();			//Programmablauf
 	void scoring();		//Auswertung Spiel

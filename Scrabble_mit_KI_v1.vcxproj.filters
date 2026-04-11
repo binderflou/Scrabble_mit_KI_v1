@@ -47,5 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="config_de.txt" />
+    <Text Include="dataBase.txt" />
   </ItemGroup>
 </Project>

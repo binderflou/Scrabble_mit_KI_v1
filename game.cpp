@@ -264,7 +264,7 @@ int Game::draw() {
 			if (partvector.size() != 3) {
 				std::cout << "Ungültige Eingabe, bitte erneut versuchen.\n";
 				std::this_thread::sleep_for(std::chrono::seconds(3));
-				return 2;
+				continue;
 			}
 			else {
 				std::string letter = partvector[0];
@@ -311,8 +311,18 @@ int Game::draw() {
 				std::string validLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ_";
 				bool isLetterValid = letter.length() > 0 && validLetters.find(letterUpper) != std::string::npos;
 
-				if (!isLetterValid || col < 0 || col > 14 || row < 0 || row > 14) {
-					std::cout << "Buchstabe, Reihe oder Spalte ungültig.\n";
+				if (!isLetterValid) {
+					std::cout << "Buchstabe ungültig.\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+				else if (row < 0 || row > 14) {
+					std::cout << "Reihe ungültig.\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+				else if (col < 0 || col > 14) {
+					std::cout << "Spalte ungültig.\n";
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					continue;
 				}
@@ -344,6 +354,44 @@ int Game::draw() {
 		m_active = false;
 	}
 	
+}
+void checkTile(std::string letter, int col, int row, char colChar) {
+
+	std::string validLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ_";
+	bool isLetterValid = letter.length() > 0 && validLetters.find(letterUpper) != std::string::npos;
+
+	if (!isLetterValid) {
+		std::cout << "Buchstabe ungültig.\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		return;
+	}
+	else if (row < 0 || row > 14) {
+		std::cout << "Reihe ungültig.\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		return;
+	}
+	else if (col < 0 || col > 14) {
+		std::cout << "Spalte ungültig.\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		return;
+	}
+	else if (!m_players[m_activePlayer].hasTile(letterUpper)) {
+		std::cout << "Du hast diesen Buchstaben nicht!\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		return;
+	}
+	else if (!m_board.isEmpty(row, col)) {
+		std::cout << "Dieses Feld ist bereits belegt!\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		return;
+	}
+	else {
+		Tile* tilePtr = new Tile(&m_players[m_activePlayer]->takeTile(letterUpper));
+		m_board.placeTile(tilePtr, row, col);
+		std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
+		std::cout << "Nächster Zug...\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+	}
 }
 bool Game::checkDraw() {
 	//To-Do Logik für Zugauswertung + Punkteberechnung
