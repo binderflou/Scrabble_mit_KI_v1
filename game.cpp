@@ -459,7 +459,7 @@ bool Game::isConnected() {
 			}
 		}
 	}
-
+	return isConnected;
 	//To-Do: Verbindung zu bereits liegenden Steinen überprüfen (außer bei erstem Zug)
 }
 
