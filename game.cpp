@@ -43,11 +43,12 @@ void Game::run() {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<> dist(0, 200);
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		int randomScore = dist(gen);
-		m_players[i].setScore(randomScore);
-	}
+	//
+	//for (int i = 0; i < m_players.size(); i++)
+	//{
+	//	int randomScore = dist(gen);
+	//	m_players[i].setScore(randomScore);
+	//}
 
 	//Ablauf: Start ermitteln -> Zug -> Check -> Spielerwechsel->
 	//                           |                               |
@@ -69,6 +70,7 @@ void Game::run() {
 		}
 		case RunCase::CheckDraw: {
 			if (checkDraw()) {
+				DrawScore();
 				m_runCase = RunCase::ChangeActivePlayer;
 				break;
 			}
@@ -283,7 +285,7 @@ int Game::draw() {
 						throw std::invalid_argument("Spalte muss ein Buchstabe sein");
 					}
 					colChar = std::toupper(colStr[0]);
-					int col = colChar - 'A';
+					col = colChar - 'A';
 				}
 				catch (...){
 					std::cout << "Ungültige Eingabe, bitte Format beachten: Buchstabe, Buchstabe, Zahl.\n";
@@ -340,12 +342,12 @@ int Game::draw() {
 					Tile* tilePtr = new Tile(player->takeTile(letterUpper));
 					m_board.placeTile(tilePtr, row, col);
 					std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
+					m_drawPlacements.push_back({ row, col });
 					std::cout << "Nächster Zug...\n";
-					std::this_thread::sleep_for(std::chrono::seconds(3));
+					std::this_thread::sleep_for(std::chrono::seconds(1));
 				}
 			}
 		}
-		m_players[m_activePlayer].drawTiles(m_bag);
 		return 0;
 	}
 	
@@ -355,70 +357,187 @@ int Game::draw() {
 	}
 	
 }
-void checkTile(std::string letter, int col, int row, char colChar) {
 
-	std::string validLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ_";
-	bool isLetterValid = letter.length() > 0 && validLetters.find(letterUpper) != std::string::npos;
-
-	if (!isLetterValid) {
-		std::cout << "Buchstabe ungültig.\n";
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-		return;
-	}
-	else if (row < 0 || row > 14) {
-		std::cout << "Reihe ungültig.\n";
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-		return;
-	}
-	else if (col < 0 || col > 14) {
-		std::cout << "Spalte ungültig.\n";
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-		return;
-	}
-	else if (!m_players[m_activePlayer].hasTile(letterUpper)) {
-		std::cout << "Du hast diesen Buchstaben nicht!\n";
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-		return;
-	}
-	else if (!m_board.isEmpty(row, col)) {
-		std::cout << "Dieses Feld ist bereits belegt!\n";
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-		return;
-	}
-	else {
-		Tile* tilePtr = new Tile(&m_players[m_activePlayer]->takeTile(letterUpper));
-		m_board.placeTile(tilePtr, row, col);
-		std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
-		std::cout << "Nächster Zug...\n";
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-	}
-}
 bool Game::checkDraw() {
 	//To-Do Logik für Zugauswertung + Punkteberechnung
 	//int als return für die anzahl an erzielten Punken
 	//zug gültig = true; (Züge mit 0 und 1 sind immer gültig)
 	//zug ungültig = false;
-
 	//Steine richtig gelegt -> eine Linie horizontal oder vertikal + vollständigkeit (keine Lücken)
+	if (isFirstTurn) {
+		bool hasCenter = false;
+		for (size_t i = 0; i < m_drawPlacements.size(); i++) {
+			if (m_drawPlacements[i].row == 7 && m_drawPlacements[i].col == 7) {
+				hasCenter = true;
+				break;
+			}
+		}
+		if (!hasCenter) {
+			returnTilesToPlayer();
+			m_drawPlacements.clear();
+			std::cout << "Der erste Zug muss den Mittelpunkt des Spielfelds beinhalten!\n";
+			std::this_thread::sleep_for(std::chrono::seconds(3));
+			return false;
+		}
+		isFirstTurn = false;
+	}
+	
+	if (!(isInLine() && isConnected())) {
+		returnTilesToPlayer();
+		m_drawPlacements.clear();
+	}
+
+	return isInLine() && isConnected();
 
 	//Wortkombninationen, die sich zusätzlich noch ergeben  
 
 
 	//Gelegtes Wort bekannt/neu? -> Funktion: Wort in Datenbank aufnehmen
+	
+}
 
-	//Auswerten
-	if ((m_drawValue == 0) || (m_drawValue == 1)) {
+bool Game::isInLine() {
+	bool horizontal = true;
+	bool vertical = true;
+
+	if (m_drawPlacements.size() <= 1) {
 		return true;
 	}
-	return false;
-};
+	
+	for(size_t i = 1; i < m_drawPlacements.size(); i++) {
+		if (m_drawPlacements[i].row != m_drawPlacements[0].row) {
+			horizontal = false;
+		}
+		if (m_drawPlacements[i].col != m_drawPlacements[0].col) {
+			vertical = false;
+		}
+	}
+	if(!(horizontal || vertical)) {
+		std::cout << "Die Bausteine müssen in einer Linie liegen!\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+	}
+	return horizontal || vertical;
+}
+
+bool Game::isConnected() {
+	int minRow = -1;
+	int maxRow = -1;
+	int minCol = -1;
+	int maxCol = -1;
+	bool isConnected = true;
+
+	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
+		if (minRow == -1 || m_drawPlacements[i].row < minRow) {
+			minRow = m_drawPlacements[i].row;
+		}
+		if (maxRow == -1 || m_drawPlacements[i].row > maxRow) {
+			maxRow = m_drawPlacements[i].row;
+		}
+		if (minCol == -1 || m_drawPlacements[i].col < minCol) {
+			minCol = m_drawPlacements[i].col;
+		}
+		if (maxCol == -1 || m_drawPlacements[i].col > maxCol) {
+			maxCol = m_drawPlacements[i].col;
+		}
+	}
+
+	if (minCol == maxCol) {
+		for (int i = minRow; i <= maxRow; i++) {
+			if (m_board.isEmpty(i, minCol)) {
+				isConnected = false;
+				std::cout << "Lücke bei: " << static_cast<char>('A' + minCol) << "," << i + 1 << "\n";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+			}
+		}
+	}
+	else {
+		for (int i = minCol; i <= maxCol; i++) {
+			if (m_board.isEmpty(minRow, i)) {
+				isConnected = false;
+				std::cout << "Lücke bei: " << static_cast<char>('A' + i) << "," << minRow + 1 << "\n";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+			}
+		}
+	}
+
+	//To-Do: Verbindung zu bereits liegenden Steinen überprüfen (außer bei erstem Zug)
+}
+
+int Game::DrawScore() {
+	int oldScore = m_players[m_activePlayer].getScore();
+	int drawScore = 0;
+	int wordMultiplier = 1;
+	bool isHorizontal = true;
+
+	if (m_drawPlacements.size() > 1) {
+		isHorizontal = m_drawPlacements[0].row == m_drawPlacements[1].row;
+	}
+
+	int startRow = m_drawPlacements[0].row;
+	int startCol = m_drawPlacements[0].col;
+
+	if (isHorizontal) {
+		while (startCol > 0 && !m_board.isEmpty(startRow, startCol - 1)) {
+			startCol--;
+		}
+	} else {
+		while (startRow > 0 && !m_board.isEmpty(startRow - 1, startCol)) {
+			startRow--;
+		}
+	}
+
+	int accRow = startRow;
+	int accCol = startCol;
+
+	if(checkDraw()) {
+		while (accRow < 15 && accCol < 15 && !m_board.isEmpty(accRow, accCol)) {
+			int letterValue = m_board.getTileValue(accRow, accCol);
+			for(const auto& placement : m_drawPlacements) {
+				if (placement.row == accRow && placement.col == accCol) {
+					Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
+					switch (bonusType) {
+						case Bonus::DL: letterValue *= 2; break;
+						case Bonus::TL: letterValue *= 3; break;
+						case Bonus::DW: wordMultiplier *= 2; break;
+						case Bonus::TW: wordMultiplier *= 3; break;
+						default: break;
+					}
+				}
+			}
+			drawScore += letterValue;
+
+			if (isHorizontal) accCol++; else accRow++;
+		}
+	}
+	int totalScore = drawScore * wordMultiplier;
+
+	if (m_drawPlacements.size() == 8) {
+		totalScore += 50;
+	}
+
+	m_players[m_activePlayer].setScore(oldScore + totalScore);
+	std::cout << "Punkte für diesen Zug: " << totalScore - m_players[m_activePlayer].getScore() << "\n";
+	m_drawPlacements.clear();
+	return m_players[m_activePlayer].getScore();
+}
+
+void Game::returnTilesToPlayer() {
+	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
+		Tile* tile = m_board.getTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
+		m_board.clearTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
+		m_players[m_activePlayer].giveTile(tile);
+		m_board.clearTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
+	}
+	m_drawPlacements.clear();
+}
+
 void Game::changeActivePlayer() {
+	m_players[m_activePlayer].drawTiles(m_bag);
 	m_activePlayer += 1;
 	if (m_activePlayer >= m_numberOfPlayers) {
 		m_activePlayer = 0;
 	}
 	system("cls");
 	std::cout << "____SPIELERWECHSEL____\n";
-	std::this_thread::sleep_for(std::chrono::seconds(2));
-
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 }

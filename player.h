@@ -22,5 +22,6 @@ public:
 	void putBackTile(Bag& bag, std::string letter);
 	void displayHand() const;
 	bool hasTile(std::string letter) const;
+	void giveTile(Tile* t);
 };
 

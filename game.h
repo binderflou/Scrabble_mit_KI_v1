@@ -12,7 +12,7 @@ enum class RunCase {
 };
 struct Placement
 {
-	std::string letter;
+	//std::string letter;
 	int row;
 	int col;
 };
@@ -33,6 +33,8 @@ class Game
 	int m_drawValue = 0;
 	std::vector<Placement> m_drawPlacements; //Zuordnung vom Baustein zum den koordinaten
 
+	bool isFirstTurn = true;
+
 public:
 	std::vector<Player> m_players;
 	Game(int numberOfPlayers, std::string language);
@@ -41,5 +43,9 @@ public:
 	void getFirstPlayer();
 	int draw();
 	bool checkDraw();
+	bool isInLine();
+	bool isConnected();
+	int DrawScore();
 	void changeActivePlayer();
+	void returnTilesToPlayer();
 };

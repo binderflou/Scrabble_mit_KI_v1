@@ -2,7 +2,7 @@
 #include <windows.h>
 
 
-Player::Player(std::string name) : m_name(name) {
+Player::Player(std::string name) : m_name(name), m_score(0) {
 
 }
 
@@ -82,4 +82,8 @@ bool Player::hasTile(std::string letter) const {
 		}
 	}
 	return false;
+}
+
+void Player::giveTile(Tile* t) {
+	m_hand.push_back(*t);
 }

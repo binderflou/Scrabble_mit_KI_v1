@@ -36,7 +36,7 @@ int main() {
 	bool gameActive = false;
 	MainCase activeCase = MainCase::Welcome;
 	int input;
-	int numberOfPlayers = 1; //standardmäßig nur eine Person gegen KI
+	int numberOfPlayers = 1; //standardmÃ¤ÃŸig nur eine Person gegen KI
 
 	while (programActive) {
 
@@ -51,9 +51,9 @@ int main() {
 
 		case MainCase::MainMenu:
 			system("cls");
-			std::cout << "____Hauptmenü____\n";
+			std::cout << "____HauptmenÃ¼____\n";
 			std::cout << "Aktuelle Spielerzahl: " << numberOfPlayers << "\n";
-			std::cout << "Wählen Sie eine Aktion:\n";
+			std::cout << "WÃ¤hlen Sie eine Aktion:\n";
 			std::cout << "1: Einstellungen\n";
 			std::cout << "2: Spiel starten\n";
 			std::cout << "3: Beenden\n";
@@ -89,7 +89,7 @@ int main() {
 				activeCase = MainCase::MainMenu;
 			}
 			else {
-				std::cout << "Ungültige Eingabe\n";
+				std::cout << "UngÃ¼ltige Eingabe\n";
 				std::this_thread::sleep_for(std::chrono::seconds(2));
 			}
 			break;
@@ -104,7 +104,7 @@ int main() {
 			//Anzeige Ergebnis
 			game.scoring();
 
-			std::cout << "\n\nZurück zum Homemenü mit '1'\n";
+			std::cout << "\n\nZurÃ¼ck zum HomemenÃ¼ mit '1'\n";
 			std::cin >> input;
 
 			if (input == 1) {
@@ -115,7 +115,7 @@ int main() {
 
 		case MainCase::Exit:
 			system("cls");
-			std::cout << "Möchten Sie das Spiel wirklich beenden?\n";
+			std::cout << "MÃ¶chten Sie das Spiel wirklich beenden?\n";
 			std::cout << "1: beenden\n";
 			std::cout << "2: abbrechen\n";
 

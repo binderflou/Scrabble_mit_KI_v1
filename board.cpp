@@ -135,3 +135,22 @@ bool Board::placeTile(Tile* tile, int x, int y) {
 bool Board::isEmpty(int x, int y) const {
 	return area[x][y].tile == nullptr;
 }
+
+int Board::getTileValue(int x, int y) const {
+	if (area[x][y].tile) {
+		return area[x][y].tile->value;
+	}
+	return 0;
+}
+
+Bonus Board::getTileMultiplier(int x, int y) const {
+	return area[x][y].bonus;
+}
+
+void Board::clearTile(int x, int y) {
+	area[x][y].tile = nullptr;
+}
+
+Tile* Board::getTile(int x, int y) const {
+	return area[x][y].tile;
+}
