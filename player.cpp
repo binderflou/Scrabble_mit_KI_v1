@@ -46,7 +46,7 @@ void Player::putBackTile(Bag& bag, std::string letter) {
 
 void Player::displayHand() const {
 	std::cout << "\n";
-	std::cout << m_name << ":\n";
+	std::cout << m_name << ":							" << "Punkte: " << m_score << "\n";
 	for (const auto& tile : m_hand) {
 		std::cout << "────── ";
 	}
@@ -67,7 +67,7 @@ void Player::displayHand() const {
 	for (const auto& tile : m_hand) {
 		std::cout << "────── ";
 	}
-	std::cout << std::endl;
+	std::cout << "\n";
 }
 
 bool Player::hasTile(std::string letter) const {

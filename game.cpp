@@ -95,6 +95,8 @@ void Game::scoring() {
 
 	system("cls");
 
+	m_board.display();
+
 	//Auswertung möglich
 	if (m_players.empty())
 	{
@@ -269,15 +271,26 @@ int Game::draw() {
 			m_players[m_activePlayer].displayHand();
 			std::string _inputString;
 			std::cout << "Zug konfigurieren im Format: Buchstabe,Spalte,Zeile\n";
-			std::cout << "0 um zu Beenden\n";
+			std::cout << "0 um zu Beenden; 1 um den letzten Stein zurückzunehmen\n";
 			std::getline(std::cin >> std::ws, _inputString);
 			_inputString.erase(std::remove(_inputString.begin(), _inputString.end(), ' '), _inputString.end());
 			std::stringstream ss(_inputString);
 			std::string part;
 			std::vector<std::string> partvector;
 
+			//Zug beenden
 			if(_inputString == "0") {
 				done = true;
+				continue;
+			}
+			//Zurücknehmen des letzten gelegten Bausteins
+			if (_inputString == "1") {
+				int row = m_drawPlacements.back().row;
+				int col = m_drawPlacements.back().col;
+				Tile* tile = m_board.getTile(row, col);
+				m_board.clearTile(row, col);
+				m_players[m_activePlayer].giveTile(tile);
+				m_drawPlacements.pop_back();
 				continue;
 			}
 
@@ -343,8 +356,7 @@ int Game::draw() {
 					std::cout << "Dieses Feld ist bereits belegt!\n";
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					continue;
-				}
-				else {
+				} else {
 					if(letterUpper == "_") {
 						std::string inputLetter;
 						std::cout << "Welchen Buchstaben soll der Joker annehmen? (A-Z, Ä, Ö, Ü)\n";
@@ -401,11 +413,6 @@ std::string Game::turnToUpper(std::string letter) {
 }
 
 bool Game::checkDraw() {
-	//To-Do Logik für Zugauswertung + Punkteberechnung
-	//int als return für die anzahl an erzielten Punken
-	//zug gültig = true; (Züge mit 0 und 1 sind immer gültig)
-	//zug ungültig = false;
-	//Steine richtig gelegt -> eine Linie horizontal oder vertikal + vollständigkeit (keine Lücken)
 	if (m_drawPlacements.empty()) {
 		return true;
 	}
@@ -425,15 +432,17 @@ bool Game::checkDraw() {
 			std::this_thread::sleep_for(std::chrono::seconds(3));
 			return false;
 		}
-		isFirstTurn = false;
-	}
-	
-	if (!(isInLine() && isConnected())) {
-		returnTilesToPlayer();
-		m_drawPlacements.clear();
 	}
 
-	return isInLine() && isConnected();
+	bool total = isInLine() && isConnected() && hasAdjacent();
+	
+	if (!total) {
+		returnTilesToPlayer();
+		m_drawPlacements.clear();
+		return false;
+	}
+
+	return true;
 
 	//Wortkombninationen, die sich zusätzlich noch ergeben  
 
@@ -506,7 +515,32 @@ bool Game::isConnected() {
 		}
 	}
 	return isConnected;
-	//To-Do: Verbindung zu bereits liegenden Steinen überprüfen (außer bei erstem Zug)
+}
+
+bool Game::hasAdjacent() {
+	bool hasAdjacent = false;
+
+	if (m_drawPlacements.empty() || isFirstTurn == true) {
+		return hasAdjacent = true;
+	}
+
+	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
+		int row = m_drawPlacements[i].row;
+		int col = m_drawPlacements[i].col;
+
+		if (!m_board.isEmpty(row - 1, col) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row - 1 && p.col == col; })) {
+			return hasAdjacent = true;
+		} else if (!m_board.isEmpty(row + 1, col) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row + 1 && p.col == col; })) {
+			return hasAdjacent = true;
+		} else if (!m_board.isEmpty(row, col - 1) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row && p.col == col - 1; })) {
+			return hasAdjacent = true;
+		} else if (!m_board.isEmpty(row, col + 1) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row && p.col == col + 1; })) {
+			return hasAdjacent = true;
+		}
+	}
+	std::cout << "Die Bausteine müssen an bereits gelegene Bausteine angrenzen!\n";
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	return hasAdjacent = false;
 }
 
 int Game::DrawScore() {
@@ -582,6 +616,7 @@ void Game::returnTilesToPlayer() {
 }
 
 void Game::changeActivePlayer() {
+	isFirstTurn = false;
 	m_players[m_activePlayer].drawTiles(m_bag);
 	m_activePlayer += 1;
 	if (m_activePlayer >= m_numberOfPlayers) {

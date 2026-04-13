@@ -46,6 +46,7 @@ public:
 	std::string turnToUpper(std::string letter);
 	bool isInLine();
 	bool isConnected();
+	bool hasAdjacent();
 	int DrawScore();
 	void changeActivePlayer();
 	void returnTilesToPlayer();
