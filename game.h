@@ -43,6 +43,7 @@ public:
 	void getFirstPlayer();
 	int draw();
 	bool checkDraw();
+	std::string turnToUpper(std::string letter);
 	bool isInLine();
 	bool isConnected();
 	int DrawScore();

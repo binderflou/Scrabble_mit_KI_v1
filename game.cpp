@@ -25,6 +25,7 @@ Game::Game(int numberOfPlayers, std::string language)
 		std::cout << "Name Spieler " << i << ":";
 
 		std::getline(std::cin, input); //liest komplette Zeile, cin nur bis zum ersten Leerzeichen
+		std::cout << "\n";
 
 		m_players.emplace_back(Player(input));
 
@@ -134,37 +135,34 @@ void Game::getFirstPlayer() {
 		//Jeder Spieler zieht einen Stein
 		std::cout << "Wer beginnt? Der Startspieler wird ausgelost…\n";
 		for (int i = 0; i < m_numberOfPlayers; i++) {
-			std::cout << m_players[i].getName() << " zieht einen Stein aus dem Beutel..";
+			std::cout << m_players[i].getName() << " zieht einen Stein aus dem Beutel…		";
 			_tickets.push_back(m_bag.drawTile());
-			std::this_thread::sleep_for(std::chrono::seconds(5));
+			std::this_thread::sleep_for(std::chrono::seconds(3));
 			std::cout << _tickets[i].letter << " " << _tickets[i].value << "\n";
 		}
 
 		//Auswertung gezogene Spielsteine auf höchsten Buchstabenwert
-		int _max = _tickets[0].value;
+		int _min = _tickets[0].letter[0];
 		m_activePlayer = 0;
 		_valid = true;
 
 		for (int i = 1; i < m_numberOfPlayers; i++) {
-			if (_max == _tickets[i].value)
+			if (_min == _tickets[i].letter[0])
 			{
 				_valid = false; //Wert nicht eindeutig
 				continue;
 			}
-			else {
-				if (_max < _tickets[i].value) {
-					_max = _tickets[i].value;
+			else if (_tickets[i].letter[0] < _min) {
+					_min = _tickets[i].letter[0];
 					m_activePlayer = i;
 					_valid = true; //Wert eindeutig
 				}
-			}
-
 		}
 
 		//War der _max nicht eindeutig --> Wiederholen
 		if (!_valid) {
 			std::cout << "\nErgebnis nicht eindeutig, neuer Zug!\n";
-			std::this_thread::sleep_for(std::chrono::seconds(5));
+			std::this_thread::sleep_for(std::chrono::seconds(3));
 			system("cls");
 		}
 
@@ -179,8 +177,9 @@ void Game::getFirstPlayer() {
 
 	//Ausgabe des aktiven Spieler
 	std::cout << "\n" << m_players[m_activePlayer].getName() << " startet mit dem ersten Zug. \n";
-	std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::this_thread::sleep_for(std::chrono::seconds(3));
 }
+
 int Game::draw() {
 
 	int _input = 0;
@@ -215,15 +214,37 @@ int Game::draw() {
 	if (_input == 1) {
 			std::string _inputString;
 			std::cout << "____Welche Steine sollen getauscht werden:____\n";
-			std::cout << "Eingabe ohne Leerzeichen!\n";
+			std::cout << "0 für alle Steine tauschen\n";
+			std::cout << "Eingabe getrennt durch ','!\n";
 			std::cout << "mit 'Enter' abschließen\n";
-			std::cin >> _inputString;
 
-			//Bausteine aus der Hand entfernen und in den Betuel zurücklegen
-			for (int i = 0; i < _inputString.size(); i++) {
-				std::string letter(1, _inputString[i]);
-				m_players[m_activePlayer].putBackTile(m_bag, letter);
+			std::getline(std::cin >> std::ws, _inputString);
+			_inputString.erase(std::remove(_inputString.begin(), _inputString.end(), ' '), _inputString.end());
+			std::stringstream ss(_inputString);
+			std::string part;
+			std::vector<std::string> partvector;
+
+			while (std::getline(ss, part, ',')) {
+				if (!part.empty()) {
+					partvector.push_back(part);
+				}
 			}
+			
+			for(int i = 0; i < partvector.size(); i++) {
+				std::string letterUpper = turnToUpper(partvector[i]);
+				if (!m_players[m_activePlayer].hasTile(letterUpper)) {
+					std::cout << "Du hast den Buchstaben " << partvector[i] << " nicht!\n";
+				}
+				else {
+					m_players[m_activePlayer].putBackTile(m_bag, letterUpper);
+				}
+			}
+			
+			//Bausteine aus der Hand entfernen und in den Betuel zurücklegen
+			//for (int i = 0; i < _inputString.size(); i++) {
+			//	std::string letter(1, _inputString[i]);
+			//	m_players[m_activePlayer].putBackTile(m_bag, letter);
+			//}
 			
 			//Beutel mischen
 			m_bag.shuffle();
@@ -293,22 +314,7 @@ int Game::draw() {
 					continue;
 				}
 
-				std::string letterUpper;
-				if (letter == "_") {
-					letterUpper = "_";
-				}
-				else if (letter == "Ä" || letter == "ä") {
-					letterUpper = "Ä";
-				}
-				else if (letter == "Ö" || letter == "ö") {
-					letterUpper = "Ö";
-				}
-				else if (letter == "Ü" || letter == "ü") {
-					letterUpper = "Ü";
-				}
-				else {
-					letterUpper = std::toupper(letter[0]);
-				}
+				std::string letterUpper = turnToUpper(letter);
 
 				std::string validLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ_";
 				bool isLetterValid = letter.length() > 0 && validLetters.find(letterUpper) != std::string::npos;
@@ -339,12 +345,25 @@ int Game::draw() {
 					continue;
 				}
 				else {
-					Tile* tilePtr = new Tile(player->takeTile(letterUpper));
-					m_board.placeTile(tilePtr, row, col);
-					std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
-					m_drawPlacements.push_back({ row, col });
-					std::cout << "Nächster Zug...\n";
-					std::this_thread::sleep_for(std::chrono::seconds(1));
+					if(letterUpper == "_") {
+						std::string inputLetter;
+						std::cout << "Welchen Buchstaben soll der Joker annehmen? (A-Z, Ä, Ö, Ü)\n";
+						std::cin >> inputLetter;
+						letterUpper = turnToUpper(inputLetter);
+						Tile* tilePtr = new Tile(player->takeTile("_"));
+						tilePtr->letter = letterUpper;
+						m_board.placeTile(tilePtr, row, col);
+						std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
+						m_drawPlacements.push_back({ row, col });
+					}
+					else {
+						Tile* tilePtr = new Tile(player->takeTile(letterUpper));
+						m_board.placeTile(tilePtr, row, col);
+						std::cout << "Baustein: " << letter << " Spalte: " << colChar << " Zeile: " << row + 1 << "\n";
+						m_drawPlacements.push_back({ row, col });
+						std::cout << "Nächster Zug...\n";
+						std::this_thread::sleep_for(std::chrono::seconds(1));
+					}
 				}
 			}
 		}
@@ -358,12 +377,39 @@ int Game::draw() {
 	
 }
 
+std::string Game::turnToUpper(std::string letter) {
+	if (letter.length() == 0) {
+		return "";
+	}
+	std::string letterUpper;
+	if (letter == "_") {
+		letterUpper = "_";
+	}
+	else if (letter == "Ä" || letter == "ä") {
+		letterUpper = "Ä";
+	}
+	else if (letter == "Ö" || letter == "ö") {
+		letterUpper = "Ö";
+	}
+	else if (letter == "Ü" || letter == "ü") {
+		letterUpper = "Ü";
+	}
+	else {
+		letterUpper = std::toupper(letter[0]);
+	}
+	return letterUpper;
+}
+
 bool Game::checkDraw() {
 	//To-Do Logik für Zugauswertung + Punkteberechnung
 	//int als return für die anzahl an erzielten Punken
 	//zug gültig = true; (Züge mit 0 und 1 sind immer gültig)
 	//zug ungültig = false;
 	//Steine richtig gelegt -> eine Linie horizontal oder vertikal + vollständigkeit (keine Lücken)
+	if (m_drawPlacements.empty()) {
+		return true;
+	}
+	
 	if (isFirstTurn) {
 		bool hasCenter = false;
 		for (size_t i = 0; i < m_drawPlacements.size(); i++) {
@@ -372,7 +418,7 @@ bool Game::checkDraw() {
 				break;
 			}
 		}
-		if (!hasCenter) {
+		if (m_drawPlacements.size() != 0 && !hasCenter) {
 			returnTilesToPlayer();
 			m_drawPlacements.clear();
 			std::cout << "Der erste Zug muss den Mittelpunkt des Spielfelds beinhalten!\n";
@@ -468,6 +514,10 @@ int Game::DrawScore() {
 	int drawScore = 0;
 	int wordMultiplier = 1;
 	bool isHorizontal = true;
+
+	if (m_drawPlacements.empty()) {
+		return m_players[m_activePlayer].getScore();
+	}
 
 	if (m_drawPlacements.size() > 1) {
 		isHorizontal = m_drawPlacements[0].row == m_drawPlacements[1].row;

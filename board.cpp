@@ -69,58 +69,56 @@ Board::Board() {
 	area[14][7].bonus = Bonus::TW;
 	area[14][11].bonus = Bonus::DL;
 	area[14][14].bonus = Bonus::TW;
-
 }
 
 void Board::display() const {
-	std::cout << "     A     B     C     D     E     F     G     H     I     J     K     L     M     N     O\n";
-	std::cout << "   ------------------------------------------------------------------------------------------\n";
+	std::cout << "      A     B     C     D     E     F     G     H     I     J     K     L     M     N     O\n";
+	std::cout << "   ───────────────────────────────────────────────────────────────────────────────────────────\n";
 	for (int i = 0; i < 15; i++) {
-		printf("%2d ",  i + 1);
+		printf("%2d |",  i + 1);
 		for (int j = 0; j < 15; j++) {
 			if (area[i][j].tile) {
-				std::cout << "|" << area[i][j].tile->letter << "   |";
-			}
-			else {
+				std::cout << area[i][j].tile->letter << "    |";
+			} else {
 				bonus_up(area[i][j].bonus);
 			}
 		}
 		std::cout << "\n";
 
-		std::cout << "   ";
+		std::cout << "   |";
 		for(int j = 0; j < 15; j++) {
 			if (area[i][j].tile) {
 				if (area[i][j].tile->value < 10) {
-					std::cout << "|   " << area[i][j].tile->value << "|";
+					std::cout << "    " << area[i][j].tile->value << "|";
+				} else { std::cout << "   " << area[i][j].tile->value << "|";
 				}
-				else { std::cout << "|  " << area[i][j].tile->value << "|"; }
 			}
 			else {
 				bonus_down(area[i][j].bonus);
 			}
 		}
 		std::cout << "\n";
-		std::cout << "   ------------------------------------------------------------------------------------------\n";
+		std::cout << "   ───────────────────────────────────────────────────────────────────────────────────────────\n";
 	}
 }
 
 void Board::bonus_up(Bonus bonus) const{
 	switch (bonus) {
-	case Bonus::DL: std::cout << "|" << LIGHTBLUE << "D   " << NORMAL << "|"; break;
-	case Bonus::DW: std::cout << "|" << LIGHTRED << "D   " << NORMAL << "|"; break;
-	case Bonus::TL: std::cout << "|" << BLUE << "T   " << NORMAL << "|"; break;
-	case Bonus::TW: std::cout << "|" << RED << "T   " << NORMAL << "|"; break;
-	default: std::cout << "|    |"; break;
+	case Bonus::DL: std::cout << LIGHTBLUE << "D    " << NORMAL << "|"; break;
+	case Bonus::DW: std::cout << LIGHTRED << "D    " << NORMAL << "|"; break;
+	case Bonus::TL: std::cout << BLUE << "T    " << NORMAL << "|"; break;
+	case Bonus::TW: std::cout << RED << "T    " << NORMAL << "|"; break;
+	default: std::cout << "     |"; break;
 	}
 }
 
 void Board::bonus_down(Bonus bonus) const{
 	switch (bonus) {
-	case Bonus::DL: std::cout << "|" << LIGHTBLUE << "   L" << NORMAL << "|"; break;
-	case Bonus::DW: std::cout << "|" << LIGHTRED << "   W" << NORMAL << "|"; break;
-	case Bonus::TL: std::cout << "|" << BLUE << "   L" << NORMAL << "|"; break;
-	case Bonus::TW: std::cout << "|" << RED << "   W" << NORMAL << "|"; break;
-	default: std::cout << "|    |"; break;
+	case Bonus::DL: std::cout << LIGHTBLUE << "    L" << NORMAL << "|"; break;
+	case Bonus::DW: std::cout << LIGHTRED << "    W" << NORMAL << "|"; break;
+	case Bonus::TL: std::cout << BLUE << "    L" << NORMAL << "|"; break;
+	case Bonus::TW: std::cout << RED << "    W" << NORMAL << "|"; break;
+	default: std::cout << "     |"; break;
 	}
 }
 

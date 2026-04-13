@@ -45,18 +45,18 @@ int main() {
 		case MainCase::Welcome:
 			system("cls");
 			std::cout << "Willkommen zu Scrabble mit KI\n";
-			std::this_thread::sleep_for(std::chrono::seconds(2));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 			activeCase = MainCase::MainMenu;
 			break;
 
 		case MainCase::MainMenu:
 			system("cls");
-			std::cout << "____Hauptmenü____\n";
-			std::cout << "Aktuelle Spielerzahl: " << numberOfPlayers << "\n";
+			std::cout << "			─────────────────\n" << "			│   Hauptmenü   │\n" << "			─────────────────\n";
+			std::cout << "Aktuelle Spielerzahl: " << numberOfPlayers << "\n\n";
 			std::cout << "Wählen Sie eine Aktion:\n";
-			std::cout << "1: Einstellungen\n";
-			std::cout << "2: Spiel starten\n";
-			std::cout << "3: Beenden\n";
+			std::cout << "────────────────────\n" << "│ 1: Einstellungen │\n" << "────────────────────\n";
+			std::cout << "────────────────────\n" << "│ 2: Spiel starten │\n" << "────────────────────\n";
+			std::cout << "────────────────────\n" << "│ 3: Beenden	   │\n" << "────────────────────\n";
 
 			std::cin >> input;
 
