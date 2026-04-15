@@ -205,6 +205,14 @@ int Game::draw() {
 	std::cout << "3 = Spiel beenden\n";
 
 	std::cin >> _input;
+
+	if (std::cin.fail() || _input < 0 || _input > 3) {
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << "Ungültige Eingabe, bitte in 3 Sekunden erneut versuchen.\n";
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		return draw();
+	}
 	
 	//Spielablauf
 	//0 = aussetzen
@@ -386,7 +394,6 @@ int Game::draw() {
 	if (_input == 3) {
 		m_active = false;
 	}
-	
 }
 
 std::string Game::turnToUpper(std::string letter) {
@@ -528,13 +535,13 @@ bool Game::hasAdjacent() {
 		int row = m_drawPlacements[i].row;
 		int col = m_drawPlacements[i].col;
 
-		if (!m_board.isEmpty(row - 1, col) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row - 1 && p.col == col; })) {
+		if (row != 0 && !m_board.isEmpty(row - 1, col) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row - 1 && p.col == col; })) {
 			return hasAdjacent = true;
-		} else if (!m_board.isEmpty(row + 1, col) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row + 1 && p.col == col; })) {
+		} else if (row != 14 && !m_board.isEmpty(row + 1, col) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row + 1 && p.col == col; })) {
 			return hasAdjacent = true;
-		} else if (!m_board.isEmpty(row, col - 1) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row && p.col == col - 1; })) {
+		} else if (col != 0 && !m_board.isEmpty(row, col - 1) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row && p.col == col - 1; })) {
 			return hasAdjacent = true;
-		} else if (!m_board.isEmpty(row, col + 1) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row && p.col == col + 1; })) {
+		} else if (col != 14 && !m_board.isEmpty(row, col + 1) && !std::any_of(m_drawPlacements.begin(), m_drawPlacements.end(), [row, col](const Placement& p) { return p.row == row && p.col == col + 1; })) {
 			return hasAdjacent = true;
 		}
 	}

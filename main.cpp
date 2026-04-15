@@ -60,6 +60,14 @@ int main() {
 
 			std::cin >> input;
 
+			if (std::cin.fail() || input < 0 || input > 3) {
+				std::cin.clear();
+				std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+				std::cout << "Ungültige Eingabe, bitte in 3 Sekunden erneut versuchen.\n";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				break;
+			}
+
 			//Eingabe abfangen
 			if (input == 1)
 			{
