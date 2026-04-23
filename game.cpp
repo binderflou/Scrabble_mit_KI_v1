@@ -227,7 +227,6 @@ int Game::draw() {
 	if (_input == 1) {
 			std::string _inputString;
 			std::cout << "____Welche Steine sollen getauscht werden:____\n";
-			std::cout << "0 für alle Steine tauschen\n";
 			std::cout << "Eingabe getrennt durch ','!\n";
 			std::cout << "mit 'Enter' abschließen\n";
 
@@ -561,7 +560,6 @@ bool Game::hasAdjacent() {
 			return hasAdjacent = true;
 		}
 	}
-	isFirstTurn = false;
 	std::cout << "Die Bausteine müssen an bereits gelegene Bausteine angrenzen!\n";
 	std::this_thread::sleep_for(std::chrono::seconds(3));
 	return hasAdjacent = false;
@@ -625,6 +623,9 @@ int Game::DrawScore() {
 
 	m_players[m_activePlayer].setScore(oldScore + totalScore);
 	std::cout << "Punkte für diesen Zug: " << totalScore - m_players[m_activePlayer].getScore() << "\n";
+
+	isFirstTurn = false;
+
 	m_drawPlacements.clear();
 	return m_players[m_activePlayer].getScore();
 }
