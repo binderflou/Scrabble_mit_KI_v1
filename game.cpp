@@ -1,3 +1,6 @@
+//Wörter Tausch am Anfang ->erster Zug dann kein erster Zug mehr
+//Absturz bei Wortlegen aber kein Wort legen und gleich zurücknehmen drücken ;
+//Komplette Hand tauschen
 #include <random>
 #include <thread>
 #include <chrono>
@@ -228,6 +231,7 @@ int Game::draw() {
 			std::cout << "Eingabe getrennt durch ','!\n";
 			std::cout << "mit 'Enter' abschließen\n";
 
+			//Einlesen, Leerzeichen entfernen, Aufteilen in Vektor 
 			std::getline(std::cin >> std::ws, _inputString);
 			_inputString.erase(std::remove(_inputString.begin(), _inputString.end(), ' '), _inputString.end());
 			std::stringstream ss(_inputString);
@@ -279,7 +283,7 @@ int Game::draw() {
 			m_players[m_activePlayer].displayHand();
 			std::string _inputString;
 			std::cout << "Zug konfigurieren im Format: Buchstabe,Spalte,Zeile\n";
-			std::cout << "0 um zu Beenden; 1 um den letzten Stein zurückzunehmen\n";
+			std::cout << "0 um zu Bestätigen; 1 um den letzten Stein zurückzunehmen\n";
 			std::getline(std::cin >> std::ws, _inputString);
 			_inputString.erase(std::remove(_inputString.begin(), _inputString.end(), ' '), _inputString.end());
 			std::stringstream ss(_inputString);
@@ -288,11 +292,24 @@ int Game::draw() {
 
 			//Zug beenden
 			if(_inputString == "0") {
-				done = true;
-				continue;
+				if (m_drawPlacements.empty()) {
+					std::cout << "Du hast keinen Baustein gelegt!\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
+				else {
+					done = true;
+					continue;
+				}
+				
 			}
 			//Zurücknehmen des letzten gelegten Bausteins
 			if (_inputString == "1") {
+				if(m_drawPlacements.empty()) {
+					std::cout << "Keine Bausteine zum Zurücknehmen!\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					continue;
+				}
 				int row = m_drawPlacements.back().row;
 				int col = m_drawPlacements.back().col;
 				Tile* tile = m_board.getTile(row, col);
@@ -448,7 +465,6 @@ bool Game::checkDraw() {
 		m_drawPlacements.clear();
 		return false;
 	}
-
 	return true;
 
 	//Wortkombninationen, die sich zusätzlich noch ergeben  
@@ -545,6 +561,7 @@ bool Game::hasAdjacent() {
 			return hasAdjacent = true;
 		}
 	}
+	isFirstTurn = false;
 	std::cout << "Die Bausteine müssen an bereits gelegene Bausteine angrenzen!\n";
 	std::this_thread::sleep_for(std::chrono::seconds(3));
 	return hasAdjacent = false;
@@ -623,7 +640,7 @@ void Game::returnTilesToPlayer() {
 }
 
 void Game::changeActivePlayer() {
-	isFirstTurn = false;
+	//isFirstTurn = false;
 	m_players[m_activePlayer].drawTiles(m_bag);
 	m_activePlayer += 1;
 	if (m_activePlayer >= m_numberOfPlayers) {

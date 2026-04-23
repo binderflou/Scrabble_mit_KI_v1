@@ -31,7 +31,7 @@ class Game
 	RunCase m_runCase = RunCase::GetFirstPlayer;
 	int m_activePlayer = 0;
 	int m_drawValue = 0;
-	std::vector<Placement> m_drawPlacements; //Zuordnung vom Baustein zum den koordinaten
+	std::vector<Placement> m_drawPlacements; //Zuordnung vom Baustein zum den Koordinaten, speichert Koordinaten des gelegten Steins
 
 	bool isFirstTurn = true;
 
