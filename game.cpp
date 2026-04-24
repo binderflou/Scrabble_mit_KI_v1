@@ -313,7 +313,12 @@ int Game::draw() {
 				int col = m_drawPlacements.back().col;
 				Tile* tile = m_board.getTile(row, col);
 				m_board.clearTile(row, col);
-				m_players[m_activePlayer].giveTile(tile);
+				if (tile->value == 0) {
+					m_players[m_activePlayer].giveTile(new Tile{ "_", 0 });
+				}
+				else {
+					m_players[m_activePlayer].giveTile(tile);
+				}
 				m_drawPlacements.pop_back();
 				continue;
 			}
@@ -569,6 +574,7 @@ int Game::DrawScore() {
 	int oldScore = m_players[m_activePlayer].getScore();
 	int drawScore = 0;
 	int wordMultiplier = 1;
+	int totalSecondaryScore = 0;
 	bool isHorizontal = true;
 
 	if (m_drawPlacements.empty()) {
@@ -586,7 +592,8 @@ int Game::DrawScore() {
 		while (startCol > 0 && !m_board.isEmpty(startRow, startCol - 1)) {
 			startCol--;
 		}
-	} else {
+	}
+	else {
 		while (startRow > 0 && !m_board.isEmpty(startRow - 1, startCol)) {
 			startRow--;
 		}
@@ -595,18 +602,18 @@ int Game::DrawScore() {
 	int accRow = startRow;
 	int accCol = startCol;
 
-	if(checkDraw()) {
+	if (checkDraw()) {
 		while (accRow < 15 && accCol < 15 && !m_board.isEmpty(accRow, accCol)) {
 			int letterValue = m_board.getTileValue(accRow, accCol);
-			for(const auto& placement : m_drawPlacements) {
+			for (const auto& placement : m_drawPlacements) {
 				if (placement.row == accRow && placement.col == accCol) {
 					Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
 					switch (bonusType) {
-						case Bonus::DL: letterValue *= 2; break;
-						case Bonus::TL: letterValue *= 3; break;
-						case Bonus::DW: wordMultiplier *= 2; break;
-						case Bonus::TW: wordMultiplier *= 3; break;
-						default: break;
+					case Bonus::DL: letterValue *= 2; break;
+					case Bonus::TL: letterValue *= 3; break;
+					case Bonus::DW: wordMultiplier *= 2; break;
+					case Bonus::TW: wordMultiplier *= 3; break;
+					default: break;
 					}
 				}
 			}
@@ -615,19 +622,89 @@ int Game::DrawScore() {
 			if (isHorizontal) accCol++; else accRow++;
 		}
 	}
-	int totalScore = drawScore * wordMultiplier;
 
-	if (m_drawPlacements.size() == 8) {
-		totalScore += 50;
+	for (const auto& placement : m_drawPlacements) {
+		//Sekundäre Richtung ermitteln
+
+		int secondaryStartRow = placement.row;
+		int secondaryStartCol = placement.col;
+		bool secondaryDirectionVertical = isHorizontal;
+
+		if (!secondaryDirectionVertical) {
+			while (secondaryStartCol > 0 && !m_board.isEmpty(secondaryStartRow, secondaryStartCol - 1)) {
+				secondaryStartCol--;
+			}
+		}
+		else {
+			while (secondaryStartRow > 0 && !m_board.isEmpty(secondaryStartRow - 1, secondaryStartCol)) {
+				secondaryStartRow--;
+			}
+		}
+
+		int secondaryAccRow = secondaryStartRow;
+		int secondaryAccCol = secondaryStartCol;
+
+		int secondaryScore = 0;
+		int secondaryMultiplier = 1;
+
+		if (checkDraw()) {
+			if (secondaryDirectionVertical) {
+				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !m_board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
+					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
+					for (const auto& placement : m_drawPlacements) {
+						if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
+							Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
+							switch (bonusType) {
+							case Bonus::DL: letterValue *= 2; break;
+							case Bonus::TL: letterValue *= 3; break;
+							case Bonus::DW: secondaryMultiplier *= 2; break;
+							case Bonus::TW: secondaryMultiplier *= 3; break;
+							default: break;
+							}
+						}
+					}
+					secondaryScore += letterValue;
+
+					secondaryAccRow++;
+				}
+			}
+			else {
+				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !m_board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
+					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
+					for (const auto& placement : m_drawPlacements) {
+						if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
+							Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
+							switch (bonusType) {
+							case Bonus::DL: letterValue *= 2; break;
+							case Bonus::TL: letterValue *= 3; break;
+							case Bonus::DW: secondaryMultiplier *= 2; break;
+							case Bonus::TW: secondaryMultiplier *= 3; break;
+							default: break;
+							}
+						}
+					}
+					secondaryScore += letterValue;
+
+					secondaryAccCol++;
+				}
+			}
+			totalSecondaryScore += secondaryScore * secondaryMultiplier;
+		}
 	}
 
-	m_players[m_activePlayer].setScore(oldScore + totalScore);
-	std::cout << "Punkte für diesen Zug: " << totalScore - m_players[m_activePlayer].getScore() << "\n";
+		int totalScore = drawScore * wordMultiplier + totalSecondaryScore;
 
-	isFirstTurn = false;
+		if (m_drawPlacements.size() == 8) {
+			totalScore += 50;
+		}
 
-	m_drawPlacements.clear();
-	return m_players[m_activePlayer].getScore();
+		m_players[m_activePlayer].setScore(oldScore + totalScore);
+		std::cout << "Punkte für diesen Zug: " << totalScore - m_players[m_activePlayer].getScore() << "\n";
+
+		isFirstTurn = false;
+
+		m_drawPlacements.clear();
+		return m_players[m_activePlayer].getScore();
 }
 
 void Game::returnTilesToPlayer() {
