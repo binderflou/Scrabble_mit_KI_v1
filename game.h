@@ -32,6 +32,7 @@ class Game
 	int m_activePlayer = 0;
 	int m_drawValue = 0;
 	std::vector<Placement> m_drawPlacements; //Zuordnung vom Baustein zum den Koordinaten, speichert Koordinaten des gelegten Steins
+	std::vector<Placement> m_drawPlacementsFull;
 
 	bool isFirstTurn = true;
 
@@ -48,6 +49,8 @@ public:
 	bool isConnected();
 	bool hasAdjacent();
 	int DrawScore();
+	bool checkHorizontal();
 	void changeActivePlayer();
 	void returnTilesToPlayer();
+	void learnWord();
 };

@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
 
 #include "game.h"
 
@@ -575,15 +577,12 @@ int Game::DrawScore() {
 	int drawScore = 0;
 	int wordMultiplier = 1;
 	int totalSecondaryScore = 0;
-	bool isHorizontal = true;
 
 	if (m_drawPlacements.empty()) {
 		return m_players[m_activePlayer].getScore();
 	}
 
-	if (m_drawPlacements.size() > 1) {
-		isHorizontal = m_drawPlacements[0].row == m_drawPlacements[1].row;
-	}
+	bool isHorizontal = checkHorizontal();
 
 	int startRow = m_drawPlacements[0].row;
 	int startCol = m_drawPlacements[0].col;
@@ -605,6 +604,9 @@ int Game::DrawScore() {
 	if (checkDraw()) {
 		while (accRow < 15 && accCol < 15 && !m_board.isEmpty(accRow, accCol)) {
 			int letterValue = m_board.getTileValue(accRow, accCol);
+
+			m_drawPlacementsFull.push_back({ accRow, accCol });	//Alle Steine in Wort speichern (für Lernfunktion)
+
 			for (const auto& placement : m_drawPlacements) {
 				if (placement.row == accRow && placement.col == accCol) {
 					Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
@@ -621,6 +623,7 @@ int Game::DrawScore() {
 
 			if (isHorizontal) accCol++; else accRow++;
 		}
+		learnWord();
 	}
 
 	for (const auto& placement : m_drawPlacements) {
@@ -651,6 +654,9 @@ int Game::DrawScore() {
 			if (secondaryDirectionVertical) {
 				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !m_board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
 					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
+
+					m_drawPlacementsFull.push_back({secondaryAccRow, secondaryAccCol});
+
 					for (const auto& placement : m_drawPlacements) {
 						if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
 							Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
@@ -667,10 +673,14 @@ int Game::DrawScore() {
 
 					secondaryAccRow++;
 				}
+				learnWord();
 			}
 			else {
 				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !m_board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
 					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
+
+					m_drawPlacementsFull.push_back({secondaryAccRow, secondaryAccCol});
+
 					for (const auto& placement : m_drawPlacements) {
 						if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
 							Bonus bonusType = m_board.getTileMultiplier(placement.row, placement.col);
@@ -687,6 +697,7 @@ int Game::DrawScore() {
 
 					secondaryAccCol++;
 				}
+				learnWord();
 			}
 			totalSecondaryScore += secondaryScore * secondaryMultiplier;
 		}
@@ -699,12 +710,34 @@ int Game::DrawScore() {
 		}
 
 		m_players[m_activePlayer].setScore(oldScore + totalScore);
-		std::cout << "Punkte für diesen Zug: " << totalScore - m_players[m_activePlayer].getScore() << "\n";
+		std::cout << "Punkte für diesen Zug: " << totalScore << "\n";
 
 		isFirstTurn = false;
-
+		
 		m_drawPlacements.clear();
+
 		return m_players[m_activePlayer].getScore();
+}
+
+bool Game::checkHorizontal() {
+	bool isHorizontal = true;
+
+	if (m_drawPlacements.size() == 1) {
+		int row = m_drawPlacements[0].row;
+		int col = m_drawPlacements[0].col;
+		if ((row > 0 && !m_board.isEmpty(row - 1, col)) || (row < 14 && !m_board.isEmpty(row + 1, col))) {
+			isHorizontal = false;
+		}
+		else if ((col > 0 && !m_board.isEmpty(row, col - 1)) || (col < 14 && !m_board.isEmpty(row, col + 1))) {
+			isHorizontal = true;
+		}
+	}
+
+	if (m_drawPlacements.size() > 1) {
+		isHorizontal = m_drawPlacements[0].row == m_drawPlacements[1].row;
+	}
+
+	return isHorizontal;
 }
 
 void Game::returnTilesToPlayer() {
@@ -717,8 +750,32 @@ void Game::returnTilesToPlayer() {
 	m_drawPlacements.clear();
 }
 
+//Funktion, um gelegte Wörter in die Datenbank aufzunehmen
+void Game::learnWord() {
+
+	std::ofstream test("test.txt", std::ios::app);
+
+	std::string testword = "";
+
+	bool isHorizontal = checkHorizontal();
+
+	for (size_t i = 0; i < m_drawPlacementsFull.size(); i++) {
+		int row = m_drawPlacementsFull[i].row;
+		int col = m_drawPlacementsFull[i].col;
+		if (!m_board.isEmpty(row, col)) {
+			testword += m_board.getTile(row, col)->letter;
+		}
+	}
+
+	if (testword != "") {
+		test << testword;
+		test << "\n";
+	}
+
+	m_drawPlacementsFull.clear();
+}
+
 void Game::changeActivePlayer() {
-	//isFirstTurn = false;
 	m_players[m_activePlayer].drawTiles(m_bag);
 	m_activePlayer += 1;
 	if (m_activePlayer >= m_numberOfPlayers) {
