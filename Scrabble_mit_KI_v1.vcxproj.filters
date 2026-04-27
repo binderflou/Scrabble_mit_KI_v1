@@ -47,6 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="config_de.txt" />
-    <Text Include="dataBase.txt" />
+    <Text Include="dictionary_de.txt" />
   </ItemGroup>
 </Project>

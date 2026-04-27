@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <set>
+
 #include "tile.h"
 #include "player.h"
 #include "board.h"
@@ -23,6 +25,7 @@ class Game
 	bool m_active;
 	int m_numberOfPlayers = 1;
 	std::string m_language = "config_de.txt";
+	std::set<std::string> m_wordsFromFile;
 	Bag m_bag;
 	Board m_board;
 	
@@ -52,5 +55,7 @@ public:
 	bool checkHorizontal();
 	void changeActivePlayer();
 	void returnTilesToPlayer();
+	void loadWords();
 	void learnWord();
+	void saveWords();
 };

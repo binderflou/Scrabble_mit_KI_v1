@@ -1,6 +1,3 @@
-//Wörter Tausch am Anfang ->erster Zug dann kein erster Zug mehr
-//Absturz bei Wortlegen aber kein Wort legen und gleich zurücknehmen drücken ;
-//Komplette Hand tauschen
 #include <random>
 #include <thread>
 #include <chrono>
@@ -41,20 +38,10 @@ Game::Game(int numberOfPlayers, std::string language)
 		m_players[i].drawTiles(m_bag);
 	}
 
+	loadWords();
 }
 
 void Game::run() {
-
-	//To-Do TEST!! Scoring testen --> random Werte den Spielern zuweisen
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> dist(0, 200);
-	//
-	//for (int i = 0; i < m_players.size(); i++)
-	//{
-	//	int randomScore = dist(gen);
-	//	m_players[i].setScore(randomScore);
-	//}
 
 	//Ablauf: Start ermitteln -> Zug -> Check -> Spielerwechsel->
 	//                           |                               |
@@ -127,6 +114,7 @@ void Game::scoring() {
 	}
 	std::cout << "Der Gewinner lautet: " << winner << "\n";
 }
+
 void Game::getFirstPlayer() {
 
 	bool _valid = false;
@@ -245,6 +233,7 @@ int Game::draw() {
 				}
 			}
 			
+			//Validierung der Eingabe
 			for(int i = 0; i < partvector.size(); i++) {
 				std::string letterUpper = turnToUpper(partvector[i]);
 				if (!m_players[m_activePlayer].hasTile(letterUpper)) {
@@ -254,13 +243,7 @@ int Game::draw() {
 					m_players[m_activePlayer].putBackTile(m_bag, letterUpper);
 				}
 			}
-			
-			//Bausteine aus der Hand entfernen und in den Betuel zurücklegen
-			//for (int i = 0; i < _inputString.size(); i++) {
-			//	std::string letter(1, _inputString[i]);
-			//	m_players[m_activePlayer].putBackTile(m_bag, letter);
-			//}
-			
+
 			//Beutel mischen
 			m_bag.shuffle();
 
@@ -325,6 +308,7 @@ int Game::draw() {
 				continue;
 			}
 
+			//Eingabe aufteilen
 			while (std::getline(ss, part, ',')) {
 				partvector.push_back(part);
 			}
@@ -363,6 +347,7 @@ int Game::draw() {
 				std::string validLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ_";
 				bool isLetterValid = letter.length() > 0 && validLetters.find(letterUpper) != std::string::npos;
 
+				//Validierung der Eingabe
 				if (!isLetterValid) {
 					std::cout << "Buchstabe ungültig.\n";
 					std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -388,6 +373,7 @@ int Game::draw() {
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					continue;
 				} else {
+					//Baustein auf dem Spielfeld platzieren
 					if(letterUpper == "_") {
 						std::string inputLetter;
 						std::cout << "Welchen Buchstaben soll der Joker annehmen? (A-Z, Ä, Ö, Ü)\n";
@@ -419,6 +405,7 @@ int Game::draw() {
 	}
 }
 
+//Funktion, um eingegebene Buchstaben in Großbuchstaben umzuwandeln
 std::string Game::turnToUpper(std::string letter) {
 	if (letter.length() == 0) {
 		return "";
@@ -442,11 +429,13 @@ std::string Game::turnToUpper(std::string letter) {
 	return letterUpper;
 }
 
+//Funktion, um zu überprüfen, ob der Zug gültig ist
 bool Game::checkDraw() {
 	if (m_drawPlacements.empty()) {
 		return true;
 	}
 	
+	//Überprüfen, ob der erste Zug den Mittelpunkt des Spielfelds beinhaltet
 	if (isFirstTurn) {
 		bool hasCenter = false;
 		for (size_t i = 0; i < m_drawPlacements.size(); i++) {
@@ -472,14 +461,9 @@ bool Game::checkDraw() {
 		return false;
 	}
 	return true;
-
-	//Wortkombninationen, die sich zusätzlich noch ergeben  
-
-
-	//Gelegtes Wort bekannt/neu? -> Funktion: Wort in Datenbank aufnehmen
-	
 }
 
+//Funktion, um zu überprüfen, ob die gelegten Steine in einer Linie liegen
 bool Game::isInLine() {
 	bool horizontal = true;
 	bool vertical = true;
@@ -510,6 +494,7 @@ bool Game::isConnected() {
 	int maxCol = -1;
 	bool isConnected = true;
 
+	//Min und Max Zeile/Spalte der gelegten Steine ermitteln
 	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
 		if (minRow == -1 || m_drawPlacements[i].row < minRow) {
 			minRow = m_drawPlacements[i].row;
@@ -525,6 +510,7 @@ bool Game::isConnected() {
 		}
 	}
 
+	//Überprüfen, ob alle Felder zwischen min und max belegt sind
 	if (minCol == maxCol) {
 		for (int i = minRow; i <= maxRow; i++) {
 			if (m_board.isEmpty(i, minCol)) {
@@ -553,6 +539,7 @@ bool Game::hasAdjacent() {
 		return hasAdjacent = true;
 	}
 
+	//Überprüfen, ob mindestens ein gelegter Baustein an einen bereits gelegten Baustein angrenzt
 	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
 		int row = m_drawPlacements[i].row;
 		int col = m_drawPlacements[i].col;
@@ -587,6 +574,7 @@ int Game::DrawScore() {
 	int startRow = m_drawPlacements[0].row;
 	int startCol = m_drawPlacements[0].col;
 
+	//In Richtung des Hauptworts zum Anfang laufen
 	if (isHorizontal) {
 		while (startCol > 0 && !m_board.isEmpty(startRow, startCol - 1)) {
 			startCol--;
@@ -601,6 +589,7 @@ int Game::DrawScore() {
 	int accRow = startRow;
 	int accCol = startCol;
 
+	//Hauptwort durchlaufen
 	if (checkDraw()) {
 		while (accRow < 15 && accCol < 15 && !m_board.isEmpty(accRow, accCol)) {
 			int letterValue = m_board.getTileValue(accRow, accCol);
@@ -651,6 +640,7 @@ int Game::DrawScore() {
 		int secondaryMultiplier = 1;
 
 		if (checkDraw()) {
+			//Sekundäre Richtung (vertikal) durchlaufen
 			if (secondaryDirectionVertical) {
 				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !m_board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
 					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
@@ -675,6 +665,7 @@ int Game::DrawScore() {
 				}
 				learnWord();
 			}
+			//Sekundäre Richtung (horizontal) durchlaufen
 			else {
 				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !m_board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
 					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
@@ -705,6 +696,7 @@ int Game::DrawScore() {
 
 		int totalScore = drawScore * wordMultiplier + totalSecondaryScore;
 
+		//Bingo Bonus
 		if (m_drawPlacements.size() == 8) {
 			totalScore += 50;
 		}
@@ -722,6 +714,7 @@ int Game::DrawScore() {
 bool Game::checkHorizontal() {
 	bool isHorizontal = true;
 
+	//Wenn nur ein Stein gelegt wurde, Richtung anhand benachbarter Steine ermitteln
 	if (m_drawPlacements.size() == 1) {
 		int row = m_drawPlacements[0].row;
 		int col = m_drawPlacements[0].col;
@@ -733,6 +726,7 @@ bool Game::checkHorizontal() {
 		}
 	}
 
+	//Wenn mehrere Steine gelegt wurden, Richtung anhand der gesetzten Steine ermitteln
 	if (m_drawPlacements.size() > 1) {
 		isHorizontal = m_drawPlacements[0].row == m_drawPlacements[1].row;
 	}
@@ -740,6 +734,7 @@ bool Game::checkHorizontal() {
 	return isHorizontal;
 }
 
+//Funktion, um gelegte Steine zurück auf die Hand zu nehmen
 void Game::returnTilesToPlayer() {
 	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
 		Tile* tile = m_board.getTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
@@ -750,32 +745,75 @@ void Game::returnTilesToPlayer() {
 	m_drawPlacements.clear();
 }
 
+//Funktion, um Wörter aus der Datenbank zu laden
+void Game::loadWords() {
+	std::ifstream inputFile("dictionary_de.txt");
+	std::string word;
+
+	while (std::getline(inputFile, word))
+	{
+		if (!word.empty()) {
+			m_wordsFromFile.insert(word);
+		}
+	}
+}
+
 //Funktion, um gelegte Wörter in die Datenbank aufzunehmen
 void Game::learnWord() {
 
-	std::ofstream test("test.txt", std::ios::app);
+	std::string word = "";
 
-	std::string testword = "";
-
-	bool isHorizontal = checkHorizontal();
-
+	//Wort aus den gelegten Steinen zusammensetzen
 	for (size_t i = 0; i < m_drawPlacementsFull.size(); i++) {
 		int row = m_drawPlacementsFull[i].row;
 		int col = m_drawPlacementsFull[i].col;
 		if (!m_board.isEmpty(row, col)) {
-			testword += m_board.getTile(row, col)->letter;
+			word += m_board.getTile(row, col)->letter;
 		}
 	}
 
-	if (testword != "") {
-		test << testword;
-		test << "\n";
-	}
-
 	m_drawPlacementsFull.clear();
+
+	if (word.empty()) {
+		return;
+	}
+	//Abfragen ob Wort erlernt werden soll
+	else {
+		std::cout << "\n";
+		std::cout << "Dieses Wort der KI erlernen?: " << word << "\n";
+		std::cout << "0 = Nein, 1 = Ja\n";
+		int input = 0;
+		std::cin >> input;
+
+		while (std::cin.fail() || input < 0 || input > 1) {
+				std::cin.clear();
+				std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+				std::cout << "Ungültige Eingabe, bitte in 3 Sekunden erneut versuchen.\n";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				std::cin >> input;
+		}
+
+		if (input == 0) {
+			return;
+		}
+		else {
+			m_wordsFromFile.insert(word);
+		}
+	}
 }
 
+//Funktion, um Wörter in die Datenbank zu speichern
+void Game::saveWords() {
+	std::ofstream outputFile("dictionary_de.txt");
+	for (const auto& word : m_wordsFromFile) {
+		outputFile << word << "\n";
+	}
+	outputFile.close();
+}
+
+//Funktion, um zum nächsten Spieler zu wechseln
 void Game::changeActivePlayer() {
+	saveWords();
 	m_players[m_activePlayer].drawTiles(m_bag);
 	m_activePlayer += 1;
 	if (m_activePlayer >= m_numberOfPlayers) {
