@@ -774,7 +774,7 @@ void Game::learnWord() {
 
 	m_drawPlacementsFull.clear();
 
-	if (word.empty()) {
+	if (word.empty() || m_wordsFromFile.find(word) != m_wordsFromFile.end()) {
 		return;
 	}
 	//Abfragen ob Wort erlernt werden soll

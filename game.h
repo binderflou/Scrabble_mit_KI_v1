@@ -12,9 +12,9 @@ enum class RunCase {
 	CheckDraw,
 	ChangeActivePlayer,
 };
+
 struct Placement
 {
-	//std::string letter;
 	int row;
 	int col;
 };

@@ -5,7 +5,7 @@
 #include <iostream>
 
 class Player {
-private:
+protected:
 	int m_score;
 	std::string m_name;
 	std::vector<Tile> m_hand;

@@ -135,6 +135,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="ki.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="player.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -152,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="board.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="ki.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="tile.h" />
   </ItemGroup>
