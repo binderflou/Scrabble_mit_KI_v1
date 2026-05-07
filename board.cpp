@@ -83,6 +83,7 @@ void Board::display() const {
 				bonus_up(area[i][j].bonus);
 			}
 		}
+		printf(" %2d", i + 1);
 		std::cout << "\n";
 
 		std::cout << "   |";
@@ -100,6 +101,7 @@ void Board::display() const {
 		std::cout << "\n";
 		std::cout << "   ───────────────────────────────────────────────────────────────────────────────────────────\n";
 	}
+	std::cout << "      A     B     C     D     E     F     G     H     I     J     K     L     M     N     O\n";
 }
 
 void Board::bonus_up(Bonus bonus) const{

@@ -739,7 +739,12 @@ void Game::returnTilesToPlayer() {
 	for (size_t i = 0; i < m_drawPlacements.size(); i++) {
 		Tile* tile = m_board.getTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
 		m_board.clearTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
-		m_players[m_activePlayer].giveTile(tile);
+		if (tile->value == 0) {
+			m_players[m_activePlayer].giveTile(new Tile{ "_", 0 });
+		}
+		else {
+			m_players[m_activePlayer].giveTile(tile);
+		}
 		m_board.clearTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
 	}
 	m_drawPlacements.clear();
