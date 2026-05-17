@@ -8,6 +8,19 @@ struct Square {
 	Bonus bonus = Bonus::NONE;
 };
 
+struct Placement
+{
+	int row;
+	int col;
+};
+
+struct PlacementKi
+{
+	int row;
+	int col;
+	Tile tile;
+};
+
 class Board {
 	private:
 		Square area[15][15];

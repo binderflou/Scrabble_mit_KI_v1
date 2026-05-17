@@ -37,6 +37,7 @@ int main() {
 	MainCase activeCase = MainCase::Welcome;
 	int input;
 	int numberOfPlayers = 1; //standardmäßig nur eine Person gegen KI
+	bool aiActive = false;
 
 	while (programActive) {
 
@@ -86,14 +87,38 @@ int main() {
 		case MainCase::Settings:
 			system("cls");
 			std::cout << "____Einstellungen____\n";
-			std::cout << "Spieleranzahl: ";
+			std::cout << "Soll eine KI teilnehmen?\n";
+			std::cout << "1: Ja\n";
+			std::cout << "2: Nein\n";
+
+			std::cin >> input;
+
+			if (std::cin.fail() || input < 1 || input > 2) {
+				std::cin.clear();
+				std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+				std::cout << "Ungültige Eingabe, bitte in 3 Sekunden erneut versuchen.\n";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				break;
+			}
+
+			if (input == 1) {
+				numberOfPlayers = 1;
+				aiActive = true;
+				std::cout << "KI aktiviert\n\n";
+			}
+			else if (input == 2) {
+				numberOfPlayers = 0;
+				std::cout << "KI deaktiviert\n\n";
+			}
+
+			std::cout << "Menschliche Spieleranzahl: ";
 
 			std::cin >> input;
 
 			//Eingabe abfangen
 			if ((input > 0) && (input <= 2))
 			{
-				numberOfPlayers = input;
+				numberOfPlayers = input + numberOfPlayers;
 				activeCase = MainCase::MainMenu;
 			}
 			else {
@@ -104,7 +129,7 @@ int main() {
 
 		case MainCase::Playing:
 		{
-			Game game(numberOfPlayers, "config_de.txt");
+			Game game(numberOfPlayers, aiActive, "config_de.txt");
 
 			//Spielablauf
 			game.run();

@@ -10,7 +10,7 @@
 #include "game.h"
 
 //Konstuktor
-Game::Game(int numberOfPlayers, std::string language)
+Game::Game(int numberOfPlayers, bool aiActive, std::string language)
 	: m_numberOfPlayers(numberOfPlayers),
 	m_bag(language), m_active(true)
 {
@@ -23,19 +23,26 @@ Game::Game(int numberOfPlayers, std::string language)
 		if (i == 1)
 			system("cls");
 
+		if (aiActive && i == m_numberOfPlayers) {
+			std::cout << "KI aktiviert, Spieler " << i << " ist die KI.\n";
+			m_players.emplace_back(new Ki("KI"));
+			std::this_thread::sleep_for(std::chrono::seconds(3));
+			continue;
+		}
+
 		//Name für den i. Player eingeben
 		std::cout << "Name Spieler " << i << ":";
 
 		std::getline(std::cin, input); //liest komplette Zeile, cin nur bis zum ersten Leerzeichen
 		std::cout << "\n";
 
-		m_players.emplace_back(Player(input));
+		m_players.emplace_back(new Player(input));
 
 	}
 
 	//jeden Spieler 8 Buchstaben aus dem Beutel ziehen lassen
 	for (int i = 0; i < m_numberOfPlayers; i++) {
-		m_players[i].drawTiles(m_bag);
+		m_players[i]->drawTiles(m_bag);
 	}
 
 	loadWords();
@@ -57,8 +64,27 @@ void Game::run() {
 		}
 
 		case RunCase::Draw: {
-			m_drawValue = draw();
-			m_runCase = RunCase::CheckDraw;
+			Ki* kiPlayer = dynamic_cast<Ki*>(m_players[m_activePlayer]);
+
+			if (kiPlayer != nullptr) {
+				std::cout << "KI ist am Zug...\n";
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+				bool moveMade = KiMove(kiPlayer);
+
+				if (!moveMade) {
+					std::cout << "KI konnte keinen gültigen Zug finden und muss aussetzen.\n";
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					m_runCase = RunCase::ChangeActivePlayer;
+				}
+				else {
+					m_runCase = RunCase::CheckDraw;
+				}
+
+			}
+			else {
+				m_drawValue = draw();
+				m_runCase = RunCase::CheckDraw;
+			}
 			break;
 		}
 		case RunCase::CheckDraw: {
@@ -98,17 +124,17 @@ void Game::scoring() {
 
 	//Ausgabe aller Werte
 	for (int i = 0; i < m_players.size(); i++) {
-		std::cout << "Punkte " << m_players[i].getName() << ": " << m_players[i].getScore() << "\n";
+		std::cout << "Punkte " << m_players[i]->getName() << ": " << m_players[i]->getScore() << "\n";
 	}
 
 	//Gewinner ermitteln
-	std::string winner = m_players[0].getName();
-	int max = m_players[0].getScore();
+	std::string winner = m_players[0]->getName();
+	int max = m_players[0]->getScore();
 	for (int i = 1; i < m_players.size(); i++) {
-		if (max < m_players[i].getScore())
+		if (max < m_players[i]->getScore())
 		{
-			max = m_players[i].getScore();
-			winner = m_players[i].getName();
+			max = m_players[i]->getScore();
+			winner = m_players[i]->getName();
 		}
 
 	}
@@ -128,9 +154,9 @@ void Game::getFirstPlayer() {
 		_tickets.clear();
 
 		//Jeder Spieler zieht einen Stein
-		std::cout << "Wer beginnt? Der Startspieler wird ausgelost…\n";
+		std::cout << "\nWer beginnt? Der Startspieler wird ausgelost…\n";
 		for (int i = 0; i < m_numberOfPlayers; i++) {
-			std::cout << m_players[i].getName() << " zieht einen Stein aus dem Beutel…		";
+			std::cout << m_players[i]->getName() << " zieht einen Stein aus dem Beutel…		";
 			_tickets.push_back(m_bag.drawTile());
 			std::this_thread::sleep_for(std::chrono::seconds(3));
 			std::cout << _tickets[i].letter << " " << _tickets[i].value << "\n";
@@ -171,7 +197,7 @@ void Game::getFirstPlayer() {
 	}
 
 	//Ausgabe des aktiven Spieler
-	std::cout << "\n" << m_players[m_activePlayer].getName() << " startet mit dem ersten Zug. \n";
+	std::cout << "\n" << m_players[m_activePlayer]->getName() << " startet mit dem ersten Zug. \n";
 	std::this_thread::sleep_for(std::chrono::seconds(3));
 }
 
@@ -189,7 +215,8 @@ int Game::draw() {
 	//Anzeige UI
 	system("cls");
 	m_board.display();
-	m_players[m_activePlayer].displayHand();
+	m_players[m_activePlayer]->displayHand();
+	m_players[m_activePlayer + 1]->displayHand();
 
 	std::cout << "____Aktion wählen____\n";
 	std::cout << "0 = aussetzen\n";
@@ -236,11 +263,11 @@ int Game::draw() {
 			//Validierung der Eingabe
 			for(int i = 0; i < partvector.size(); i++) {
 				std::string letterUpper = turnToUpper(partvector[i]);
-				if (!m_players[m_activePlayer].hasTile(letterUpper)) {
+				if (!m_players[m_activePlayer]->hasTile(letterUpper)) {
 					std::cout << "Du hast den Buchstaben " << partvector[i] << " nicht!\n";
 				}
 				else {
-					m_players[m_activePlayer].putBackTile(m_bag, letterUpper);
+					m_players[m_activePlayer]->putBackTile(m_bag, letterUpper);
 				}
 			}
 
@@ -248,9 +275,9 @@ int Game::draw() {
 			m_bag.shuffle();
 
 			//neue Bausteine ziehen
-			m_players[m_activePlayer].drawTiles(m_bag);
+			m_players[m_activePlayer]->drawTiles(m_bag);
 			std::cout << "Folgende neue Hand: \n";
-			m_players[m_activePlayer].displayHand();
+			m_players[m_activePlayer]->displayHand();
 			std::this_thread::sleep_for(std::chrono::seconds(3));
 		
 			return 0;
@@ -259,12 +286,12 @@ int Game::draw() {
 	//2 = Zug konfigurieren
 	if (_input == 2) {
 		bool done = false;
-		Player* player = &m_players[m_activePlayer];
+		Player* player = m_players[m_activePlayer];
 
 		while (!done) {
 			system("cls");
 			m_board.display();
-			m_players[m_activePlayer].displayHand();
+			m_players[m_activePlayer]->displayHand();
 			std::string _inputString;
 			std::cout << "Zug konfigurieren im Format: Buchstabe,Spalte,Zeile\n";
 			std::cout << "0 um zu Bestätigen; 1 um den letzten Stein zurückzunehmen\n";
@@ -299,10 +326,10 @@ int Game::draw() {
 				Tile* tile = m_board.getTile(row, col);
 				m_board.clearTile(row, col);
 				if (tile->value == 0) {
-					m_players[m_activePlayer].giveTile(new Tile{ "_", 0 });
+					m_players[m_activePlayer]->giveTile(new Tile{ "_", 0 });
 				}
 				else {
-					m_players[m_activePlayer].giveTile(tile);
+					m_players[m_activePlayer]->giveTile(tile);
 				}
 				m_drawPlacements.pop_back();
 				continue;
@@ -363,7 +390,7 @@ int Game::draw() {
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					continue;
 				}
-				else if (!m_players[m_activePlayer].hasTile(letterUpper)) {
+				else if (!m_players[m_activePlayer]->hasTile(letterUpper)) {
 					std::cout << "Du hast diesen Buchstaben nicht!\n";
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					continue;
@@ -560,13 +587,13 @@ bool Game::hasAdjacent() {
 }
 
 int Game::DrawScore() {
-	int oldScore = m_players[m_activePlayer].getScore();
+	int oldScore = m_players[m_activePlayer]->getScore();
 	int drawScore = 0;
 	int wordMultiplier = 1;
 	int totalSecondaryScore = 0;
 
 	if (m_drawPlacements.empty()) {
-		return m_players[m_activePlayer].getScore();
+		return m_players[m_activePlayer]->getScore();
 	}
 
 	bool isHorizontal = checkHorizontal();
@@ -701,14 +728,14 @@ int Game::DrawScore() {
 			totalScore += 50;
 		}
 
-		m_players[m_activePlayer].setScore(oldScore + totalScore);
+		m_players[m_activePlayer]->setScore(oldScore + totalScore);
 		std::cout << "Punkte für diesen Zug: " << totalScore << "\n";
 
 		isFirstTurn = false;
 		
 		m_drawPlacements.clear();
 
-		return m_players[m_activePlayer].getScore();
+		return m_players[m_activePlayer]->getScore();
 }
 
 bool Game::checkHorizontal() {
@@ -740,10 +767,10 @@ void Game::returnTilesToPlayer() {
 		Tile* tile = m_board.getTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
 		m_board.clearTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
 		if (tile->value == 0) {
-			m_players[m_activePlayer].giveTile(new Tile{ "_", 0 });
+			m_players[m_activePlayer]->giveTile(new Tile{ "_", 0 });
 		}
 		else {
-			m_players[m_activePlayer].giveTile(tile);
+			m_players[m_activePlayer]->giveTile(tile);
 		}
 		m_board.clearTile(m_drawPlacements[i].row, m_drawPlacements[i].col);
 	}
@@ -819,7 +846,7 @@ void Game::saveWords() {
 //Funktion, um zum nächsten Spieler zu wechseln
 void Game::changeActivePlayer() {
 	saveWords();
-	m_players[m_activePlayer].drawTiles(m_bag);
+	m_players[m_activePlayer]->drawTiles(m_bag);
 	m_activePlayer += 1;
 	if (m_activePlayer >= m_numberOfPlayers) {
 		m_activePlayer = 0;
@@ -827,4 +854,26 @@ void Game::changeActivePlayer() {
 	system("cls");
 	std::cout << "____SPIELERWECHSEL____\n";
 	std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+bool Game::KiMove(Ki* ki) {
+	m_drawPlacements.clear();
+	std::vector<Move> possibleWords = ki->calculateBestMove(m_board, m_wordsFromFile);
+
+	if (possibleWords.empty()) {
+		return false;
+	}
+
+	Move bestMove = possibleWords[0];
+
+	for (auto& placement : bestMove.placements) {
+		Tile tile = ki->takeTile(placement.tile.letter);
+		Tile* tilePtr = new Tile(tile);
+		m_board.placeTile(tilePtr, placement.row, placement.col);
+		m_drawPlacements.push_back({ placement.row, placement.col });
+	}
+
+	std::cout << "KI legt das Wort: " << bestMove.word << "\n";
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	return true;
 }

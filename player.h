@@ -23,5 +23,6 @@ public:
 	void displayHand() const;
 	bool hasTile(std::string letter) const;
 	void giveTile(Tile* t);
+	virtual ~Player() = default;
 };
 

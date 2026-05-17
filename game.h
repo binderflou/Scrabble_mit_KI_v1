@@ -4,6 +4,7 @@
 
 #include "tile.h"
 #include "player.h"
+#include "ki.h"
 #include "board.h"
 
 enum class RunCase {
@@ -11,12 +12,6 @@ enum class RunCase {
 	Draw,
 	CheckDraw,
 	ChangeActivePlayer,
-};
-
-struct Placement
-{
-	int row;
-	int col;
 };
 
 class Game
@@ -28,7 +23,6 @@ class Game
 	std::set<std::string> m_wordsFromFile;
 	Bag m_bag;
 	Board m_board;
-	
 
 	//Zug-Eigenschaften
 	RunCase m_runCase = RunCase::GetFirstPlayer;
@@ -40,8 +34,8 @@ class Game
 	bool isFirstTurn = true;
 
 public:
-	std::vector<Player> m_players;
-	Game(int numberOfPlayers, std::string language);
+	std::vector<Player*> m_players;
+	Game(int numberOfPlayers, bool aiActive, std::string language);
 	void run();			//Programmablauf
 	void scoring();		//Auswertung Spiel
 	void getFirstPlayer();
@@ -58,4 +52,5 @@ public:
 	void loadWords();
 	void learnWord();
 	void saveWords();
+	bool KiMove(Ki* ki);
 };
