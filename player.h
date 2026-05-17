@@ -9,10 +9,10 @@ protected:
 	int m_score;
 	std::string m_name;
 	std::vector<Tile> m_hand;
-	const size_t MAX_HAND = 8;
 
 public:
 	Player(std::string name);
+	const size_t MAX_HAND = 8;
 	std::string getName();
 	int getScore();
 	void setScore(int score);
@@ -23,6 +23,7 @@ public:
 	void displayHand() const;
 	bool hasTile(std::string letter) const;
 	void giveTile(Tile* t);
+	std::vector<Tile> getHand();
 	virtual ~Player() = default;
 };
 

@@ -137,6 +137,9 @@ bool Board::isEmpty(int x, int y) const {
 }
 
 int Board::getTileValue(int x, int y) const {
+	if (x < 0 || x >= 15 || y < 0 || y >= 15) {
+		return 0;
+	}
 	if (area[x][y].tile) {
 		return area[x][y].tile->value;
 	}

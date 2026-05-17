@@ -861,6 +861,13 @@ bool Game::KiMove(Ki* ki) {
 	std::vector<Move> possibleWords = ki->calculateBestMove(m_board, m_wordsFromFile);
 
 	if (possibleWords.empty()) {
+		auto handKopie = ki->getHand();
+		for (int i = ki->MAX_HAND - 1; i >= 0; i--) {
+			ki->putBackTile(m_bag, handKopie[i].letter);
+		}
+		m_bag.shuffle();
+		m_players[m_activePlayer]->drawTiles(m_bag);
+
 		return false;
 	}
 

@@ -17,14 +17,14 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 
 				for (int i = 1; i <= 4; i++) {
 					if (c - i >= 0 && !board.isEmpty(r, c - i)) {
-						std::vector<PlacementKi> testPlacements;
-						findWord(r, c - i, "", dictionary, hand, testPlacements, board, true);
+						std::vector<PlacementKi> currentPlacements;
+						findWord(r, c - i, "", dictionary, hand, currentPlacements, board, true);
 					}
 				}
 				for (int i = 1; i <= 4; i++) {
 					if (r - i >= 0 && !board.isEmpty(r - i, c)) {
-						std::vector<PlacementKi> testPlacements;
-						findWord(r - i, c, "", dictionary, hand, testPlacements, board, false);
+						std::vector<PlacementKi> currentPlacements;
+						findWord(r - i, c, "", dictionary, hand, currentPlacements, board, false);
 					}
 				}
 				std::vector<PlacementKi> currentPlacements;
@@ -33,6 +33,10 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 			}
 		}
 	}
+	std::sort(m_possibleMoves.begin(), m_possibleMoves.end(), [](const Move& a, const Move& b) {
+		return a.score > b.score;
+		});
+
 	return m_possibleMoves;
 }
 
@@ -48,7 +52,41 @@ bool Ki::isStartPoint(const Board& board, int row, int col) {
 	return false;
 }
 
-void Ki::findWord(int row, int col, std::string currentWord, std::set<std::string>& dictionary, std::vector<Tile>& hand, std::vector<PlacementKi> currentPlacements, Board& board, bool isHorizontal) {
+void Ki::findWord(int row, int col, std::string currentWord, std::set<std::string>& dictionary, std::vector<Tile> hand, std::vector<PlacementKi> currentPlacements, Board& board, bool isHorizontal) {
+	if (row >= 15 || col >= 15) {
+		if (dictionary.count(currentWord) && !currentPlacements.empty()) {
+			Move move;
+			move.word = currentWord;
+			move.placements = currentPlacements;
+			move.score = simulateScore(currentPlacements, board, currentWord);
+			m_possibleMoves.push_back(move);
+		}
+		return;
+	}
+	if (currentWord == "") {
+		if (isHorizontal) {
+			while (col > 0 && !board.isEmpty(row, col - 1)) {
+				col--;
+			}
+		}
+		else {
+			while (row > 0 && !board.isEmpty(row - 1, col)) {
+				row--;
+			}
+		}
+		std::string alreadyOnBoard = "";
+		while (row < 15 && col < 15 && !board.isEmpty(row, col)) {
+			alreadyOnBoard += board.getTile(row, col)->letter;
+			if (isHorizontal) {
+				col++;
+			}
+			else {
+				row++;
+			}
+		}
+		currentWord = alreadyOnBoard + currentWord;
+	}
+
 	if (!board.isEmpty(row, col)) {
 		std::string nextWord = currentWord + board.getTile(row, col)->letter;
 
@@ -62,10 +100,11 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 	return;
 	}
 	
-	if (dictionary.count(currentWord)) {
+	if (dictionary.count(currentWord) && !currentPlacements.empty()) {
 		Move move;
 		move.word = currentWord;
 		move.placements = currentPlacements;
+		move.score = simulateScore(currentPlacements, board, currentWord);
 		m_possibleMoves.push_back(move);
 	}
 
@@ -138,13 +177,45 @@ bool Ki::checkSecondary(int row, int col, const std::string& letter, std::set<st
 	int currentRow = secondaryStartRow;
 	int currentCol = secondaryStartCol;
 
-	while (currentRow < 15 && currentCol < 15 && !board.isEmpty(currentCol, currentRow)) {
+	if (secondaryDirectionVertical) {
+		while (currentRow < 15) {
+			if (currentRow == row) {
+				secondaryWord += letter;
+			}
+			else if (!board.isEmpty(currentRow, currentCol)) {
+				secondaryWord += board.getTile(currentRow, currentCol)->letter;
+			}
+			else {
+				break;
+			}
+			currentRow++;
+		}
+	} else {
+		while (currentCol < 15) {
+			if (currentCol == col) {
+				secondaryWord += letter;
+			}
+			else if (!board.isEmpty(currentRow, currentCol)) {
+				secondaryWord += board.getTile(currentRow, currentCol)->letter;
+			}
+			else {
+				break;
+			}
+			currentCol++;
+		}
+	}
+	if (secondaryWord.length() <= 1) {
+		return true;
+	}
+
+	return dictionary.count(secondaryWord) > 0;
+	/**
+	while (currentRow < 15 && currentCol < 15 && !board.isEmpty(currentRow, currentCol)) {
 		if (currentRow == row && currentCol == col) {
 			secondaryWord += letter;
 		}
 		else {
-			secondaryWord += letter;
-			auto tileptr = board.getTile(currentCol, currentRow);
+			auto tileptr = board.getTile(currentRow, currentCol);
 			if (tileptr != nullptr) {
 				secondaryWord += tileptr->letter;
 			} else {
@@ -163,8 +234,152 @@ bool Ki::checkSecondary(int row, int col, const std::string& letter, std::set<st
 	}
 
 	return dictionary.count(secondaryWord) > 0;
+	**/
 }
 
 int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, std::string word) {
-	return 0;
+	int drawScore = 0;
+	int wordMultiplier = 1;
+	int totalSecondaryScore = 0;
+
+	if (placements.empty()) {
+		return 0;
+	}
+	bool isHorizontal = true;
+
+	//Wenn nur ein Stein gelegt wurde, Richtung anhand benachbarter Steine ermitteln
+	if (placements.size() == 1) {
+		int row = placements[0].row;
+		int col = placements[0].col;
+		if ((row > 0 && !board.isEmpty(row - 1, col)) || (row < 14 && !board.isEmpty(row + 1, col))) {
+			isHorizontal = false;
+		}
+		else if ((col > 0 && !board.isEmpty(row, col - 1)) || (col < 14 && !board.isEmpty(row, col + 1))) {
+			isHorizontal = true;
+		}
+	}
+
+	//Wenn mehrere Steine gelegt wurden, Richtung anhand der gesetzten Steine ermitteln
+	if (placements.size() > 1) {
+		isHorizontal = placements[0].row == placements[1].row;
+	}
+
+	int startRow = placements[0].row;
+	int startCol = placements[0].col;
+
+	//In Richtung des Hauptworts zum Anfang laufen
+	if (isHorizontal) {
+		while (startCol > 0 && !board.isEmpty(startRow, startCol - 1)) {
+			startCol--;
+		}
+	}
+	else {
+		while (startRow > 0 && !board.isEmpty(startRow - 1, startCol)) {
+			startRow--;
+		}
+	}
+
+	int accRow = startRow;
+	int accCol = startCol;
+
+	//Hauptwort durchlaufen
+	while (accRow < 15 && accCol < 15 && !board.isEmpty(accRow, accCol)) {
+			int letterValue = board.getTileValue(accRow, accCol);
+
+			for (const auto& placement : placements) {
+				if (placement.row == accRow && placement.col == accCol) {
+					Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
+					switch (bonusType) {
+					case Bonus::DL: letterValue *= 2; break;
+					case Bonus::TL: letterValue *= 3; break;
+					case Bonus::DW: wordMultiplier *= 2; break;
+					case Bonus::TW: wordMultiplier *= 3; break;
+					default: break;
+					}
+				}
+			}
+			drawScore += letterValue;
+
+			if (isHorizontal) accCol++; else accRow++;
+	}
+
+	for (const auto& placement : placements) {
+		//Sekundäre Richtung ermitteln
+
+		int secondaryStartRow = placement.row;
+		int secondaryStartCol = placement.col;
+		bool secondaryDirectionVertical = isHorizontal;
+
+		if (!secondaryDirectionVertical) {
+			while (secondaryStartCol > 0 && !board.isEmpty(secondaryStartRow, secondaryStartCol - 1)) {
+				secondaryStartCol--;
+			}
+		}
+		else {
+			while (secondaryStartRow > 0 && !board.isEmpty(secondaryStartRow - 1, secondaryStartCol)) {
+				secondaryStartRow--;
+			}
+		}
+
+		int secondaryAccRow = secondaryStartRow;
+		int secondaryAccCol = secondaryStartCol;
+
+		int secondaryScore = 0;
+		int secondaryMultiplier = 1;
+
+		//Sekundäre Richtung (vertikal) durchlaufen
+		if (secondaryDirectionVertical) {
+			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
+				int letterValue = board.getTileValue(secondaryAccRow, secondaryAccCol);
+
+				for (const auto& placement : placements) {
+					if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
+						Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
+						switch (bonusType) {
+						case Bonus::DL: letterValue *= 2; break;
+						case Bonus::TL: letterValue *= 3; break;
+						case Bonus::DW: secondaryMultiplier *= 2; break;
+						case Bonus::TW: secondaryMultiplier *= 3; break;
+						default: break;
+						}
+					}
+				}
+				secondaryScore += letterValue;
+
+				secondaryAccRow++;
+			}
+		}
+		//Sekundäre Richtung (horizontal) durchlaufen
+		else {
+			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
+				int letterValue = board.getTileValue(secondaryAccRow, secondaryAccCol);
+
+				for (const auto& placement : placements) {
+					if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
+						Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
+						switch (bonusType) {
+						case Bonus::DL: letterValue *= 2; break;
+						case Bonus::TL: letterValue *= 3; break;
+						case Bonus::DW: secondaryMultiplier *= 2; break;
+						case Bonus::TW: secondaryMultiplier *= 3; break;
+						default: break;
+						}
+					}
+				}
+				secondaryScore += letterValue;
+
+				secondaryAccCol++;
+			}
+		}
+		totalSecondaryScore += secondaryScore * secondaryMultiplier;
+	}
+
+	int totalScore = drawScore * wordMultiplier + totalSecondaryScore;
+
+	//Bingo Bonus
+	if (placements.size() == 8) {
+		totalScore += 50;
+	}
+
+	return totalScore;
 }

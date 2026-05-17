@@ -82,3 +82,7 @@ bool Player::hasTile(std::string letter) const {
 void Player::giveTile(Tile* t) {
 	m_hand.push_back(*t);
 }
+
+std::vector<Tile> Player::getHand() {
+	return m_hand;
+}
