@@ -22,4 +22,6 @@ public:
 	bool wordStillPossible(std::string& current, std::set<std::string>& dictionary);
 	bool checkSecondary(int row, int col, const std::string& letter, std::set<std::string>& dictionary, Board& board, bool isHorizontal);
 	int simulateScore(const std::vector<PlacementKi>& placements, Board& board, std::string word);
+	bool checkSimulatedMove(const std::vector<PlacementKi>& placements, Board& board, int row, int col);
+	int getSimulatedTileScore(const std::vector<PlacementKi>& placements, int row, int col);
 };

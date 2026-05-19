@@ -4,8 +4,10 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 	m_possibleMoves.clear();
 	auto hand = m_hand;
 
+	//Sonderfall erstes Wort: Muss auf 7,7 liegen
 	if (board.isEmpty(7, 7)) {
 		std::vector<PlacementKi> placements;
+		//Wörter in beide Richtungen suchen: Row, Collomn, Aktuelles Wort, Wörterbuch, Hand, Aktuelle Platzierungen, Board, Richtung
 		findWord(7, 7, "", dictionary, hand, placements, board, true);
 		findWord(7, 7, "", dictionary, hand, placements, board, false);
 		return m_possibleMoves;
@@ -15,6 +17,7 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 		for (int c = 0; c < 15; c++) {
 			if (isStartPoint(board, r, c)) {
 
+				//In beide Richtungen suchen
 				for (int i = 1; i <= 4; i++) {
 					if (c - i >= 0 && !board.isEmpty(r, c - i)) {
 						std::vector<PlacementKi> currentPlacements;
@@ -27,9 +30,11 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 						findWord(r - i, c, "", dictionary, hand, currentPlacements, board, false);
 					}
 				}
+				/*
 				std::vector<PlacementKi> currentPlacements;
 				findWord(r, c, "", dictionary, hand, currentPlacements, board, true);
 				findWord(r, c, "", dictionary, hand, currentPlacements, board, false);
+				*/
 			}
 		}
 	}
@@ -40,6 +45,7 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 	return m_possibleMoves;
 }
 
+//Prüft ob aktuelles Feld leer ist und mindestens ein benachbartes Feld belegt ist
 bool Ki::isStartPoint(const Board& board, int row, int col) {
 	if (board.isEmpty(row, col)) {
 		if ((row > 0 && !board.isEmpty(row - 1, col)) ||
@@ -53,6 +59,7 @@ bool Ki::isStartPoint(const Board& board, int row, int col) {
 }
 
 void Ki::findWord(int row, int col, std::string currentWord, std::set<std::string>& dictionary, std::vector<Tile> hand, std::vector<PlacementKi> currentPlacements, Board& board, bool isHorizontal) {
+	//Abbruch Spielfeldrand
 	if (row >= 15 || col >= 15) {
 		if (dictionary.count(currentWord) && !currentPlacements.empty()) {
 			Move move;
@@ -63,6 +70,7 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 		}
 		return;
 	}
+	//Einlesen bereits liegender Steine
 	if (currentWord == "") {
 		if (isHorizontal) {
 			while (col > 0 && !board.isEmpty(row, col - 1)) {
@@ -89,7 +97,7 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 
 	if (!board.isEmpty(row, col)) {
 		std::string nextWord = currentWord + board.getTile(row, col)->letter;
-
+		//Prüfen ob aktuell betrachtetes Teilstück in Datenbank existiert
 		if (!wordStillPossible(nextWord, dictionary)) {
 			return;
 		}
@@ -100,6 +108,7 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 	return;
 	}
 	
+	//Wort in Vektor für mögliche Züge legen
 	if (dictionary.count(currentWord) && !currentPlacements.empty()) {
 		Move move;
 		move.word = currentWord;
@@ -116,6 +125,7 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 		return;
 	}
 
+	//Bilden von Wörter
 	for (int i = 0; i < hand.size(); i++) {
 		Tile check = hand[i];
 		std::string next = currentWord + check.letter;
@@ -142,6 +152,7 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 	}
 }
 
+//Prüft Anfang von Wort, ob in Datenbank vorhanden
 bool Ki::wordStillPossible(std::string& current, std::set<std::string>& dictionary) {
 	if (current.empty()) {
 		return true;
@@ -237,6 +248,7 @@ bool Ki::checkSecondary(int row, int col, const std::string& letter, std::set<st
 	**/
 }
 
+//Simuliert möglichen Punkte eines Zuges
 int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, std::string word) {
 	int drawScore = 0;
 	int wordMultiplier = 1;
@@ -283,24 +295,30 @@ int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, 
 	int accCol = startCol;
 
 	//Hauptwort durchlaufen
-	while (accRow < 15 && accCol < 15 && !board.isEmpty(accRow, accCol)) {
-			int letterValue = board.getTileValue(accRow, accCol);
+	while (accRow < 15 && accCol < 15 && !board.isEmpty(accRow, accCol) || checkSimulatedMove(placements, board, accRow, accCol)) {
+		int letterValue = 0;
+		if (!board.isEmpty(accRow, accCol)) {
+			letterValue = board.getTileValue(accRow, accCol);
+		}
+		else {
+			letterValue = getSimulatedTileScore(placements, accRow, accCol);
+		}
 
-			for (const auto& placement : placements) {
-				if (placement.row == accRow && placement.col == accCol) {
-					Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
-					switch (bonusType) {
-					case Bonus::DL: letterValue *= 2; break;
-					case Bonus::TL: letterValue *= 3; break;
-					case Bonus::DW: wordMultiplier *= 2; break;
-					case Bonus::TW: wordMultiplier *= 3; break;
-					default: break;
-					}
+		for (const auto& placement : placements) {
+			if (placement.row == accRow && placement.col == accCol) {
+				Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
+				switch (bonusType) {
+				case Bonus::DL: letterValue *= 2; break;
+				case Bonus::TL: letterValue *= 3; break;
+				case Bonus::DW: wordMultiplier *= 2; break;
+				case Bonus::TW: wordMultiplier *= 3; break;
+				default: break;
 				}
 			}
-			drawScore += letterValue;
+		}
+		drawScore += letterValue;
 
-			if (isHorizontal) accCol++; else accRow++;
+		if (isHorizontal) accCol++; else accRow++;
 	}
 
 	for (const auto& placement : placements) {
@@ -329,8 +347,15 @@ int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, 
 
 		//Sekundäre Richtung (vertikal) durchlaufen
 		if (secondaryDirectionVertical) {
-			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
-				int letterValue = board.getTileValue(secondaryAccRow, secondaryAccCol);
+			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !board.isEmpty(secondaryAccRow - 1, secondaryAccCol)
+				|| checkSimulatedMove(placements, board, secondaryAccRow + 1, secondaryAccCol) || checkSimulatedMove(placements, board, secondaryAccRow - 1, secondaryAccCol)) {
+				int letterValue = 0;
+				if (!board.isEmpty(secondaryAccRow, secondaryAccCol)) {
+					letterValue = board.getTileValue(secondaryAccRow, secondaryAccCol);
+				}
+				else {
+					letterValue = getSimulatedTileScore(placements, secondaryAccRow, secondaryAccCol);
+				}
 
 				for (const auto& placement : placements) {
 					if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
@@ -351,35 +376,58 @@ int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, 
 		}
 		//Sekundäre Richtung (horizontal) durchlaufen
 		else {
-			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
-				int letterValue = board.getTileValue(secondaryAccRow, secondaryAccCol);
+			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !board.isEmpty(secondaryAccRow, secondaryAccCol - 1)
+				|| checkSimulatedMove(placements, board, secondaryAccRow, secondaryAccCol + 1) || checkSimulatedMove(placements, board, secondaryAccRow, secondaryAccCol - 1)) {
+				int letterValue = 0;
+				if (!board.isEmpty(secondaryAccRow, secondaryAccCol)) {
+					letterValue = board.getTileValue(secondaryAccRow, secondaryAccCol);
+				}
+				else {
+					letterValue = getSimulatedTileScore(placements, secondaryAccRow, secondaryAccCol);
 
-				for (const auto& placement : placements) {
-					if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
-						Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
-						switch (bonusType) {
-						case Bonus::DL: letterValue *= 2; break;
-						case Bonus::TL: letterValue *= 3; break;
-						case Bonus::DW: secondaryMultiplier *= 2; break;
-						case Bonus::TW: secondaryMultiplier *= 3; break;
-						default: break;
+					for (const auto& placement : placements) {
+						if (placement.row == secondaryAccRow && placement.col == secondaryAccCol) {
+							Bonus bonusType = board.getTileMultiplier(placement.row, placement.col);
+							switch (bonusType) {
+							case Bonus::DL: letterValue *= 2; break;
+							case Bonus::TL: letterValue *= 3; break;
+							case Bonus::DW: secondaryMultiplier *= 2; break;
+							case Bonus::TW: secondaryMultiplier *= 3; break;
+							default: break;
+							}
 						}
 					}
+					secondaryScore += letterValue;
+
+					secondaryAccCol++;
 				}
-				secondaryScore += letterValue;
-
-				secondaryAccCol++;
 			}
+			totalSecondaryScore += secondaryScore * secondaryMultiplier;
 		}
-		totalSecondaryScore += secondaryScore * secondaryMultiplier;
+
+		int totalScore = drawScore * wordMultiplier + totalSecondaryScore;
+
+		//Bingo Bonus
+		if (placements.size() == 8) {
+			totalScore += 50;
+		}
+
+		return totalScore;
 	}
+}
 
-	int totalScore = drawScore * wordMultiplier + totalSecondaryScore;
+bool Ki::checkSimulatedMove(const std::vector<PlacementKi>& placements, Board& board, int row, int col) {
+	return std::any_of(placements.begin(), placements.end(), [row, col](const PlacementKi& placement) {
+		return placement.row == row && placement.col == col;
+		});
+	return 0;
+}
 
-	//Bingo Bonus
-	if (placements.size() == 8) {
-		totalScore += 50;
+int Ki::getSimulatedTileScore(const std::vector<PlacementKi>& placements, int row, int col) {
+	for (const auto& placement : placements) {
+		if (placement.row == row && placement.col == col) {
+			return placement.tile.value;
+		}
 	}
-
-	return totalScore;
+	return 0;
 }

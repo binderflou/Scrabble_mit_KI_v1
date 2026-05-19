@@ -216,7 +216,10 @@ int Game::draw() {
 	system("cls");
 	m_board.display();
 	m_players[m_activePlayer]->displayHand();
-	m_players[m_activePlayer + 1]->displayHand();
+	if (m_players.size() > 1) {
+		m_players[m_activePlayer + 1]->displayHand();
+	}
+	
 
 	std::cout << "____Aktion wählen____\n";
 	std::cout << "0 = aussetzen\n";
