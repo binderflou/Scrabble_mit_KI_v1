@@ -68,7 +68,7 @@ void Game::run() {
 
 			if (kiPlayer != nullptr) {
 				std::cout << "KI ist am Zug...\n";
-				std::this_thread::sleep_for(std::chrono::seconds(1));
+				//std::this_thread::sleep_for(std::chrono::seconds(1));
 				bool moveMade = KiMove(kiPlayer);
 
 				if (!moveMade) {
@@ -461,6 +461,12 @@ std::string Game::turnToUpper(std::string letter) {
 
 //Funktion, um zu überprüfen, ob der Zug gültig ist
 bool Game::checkDraw() {
+	Ki* kiPlayer = dynamic_cast<Ki*>(m_players[m_activePlayer]);
+
+	if (kiPlayer == nullptr) {
+		return true;
+	}
+
 	if (m_drawPlacements.empty()) {
 		return true;
 	}
@@ -621,7 +627,7 @@ int Game::DrawScore() {
 
 	//Hauptwort durchlaufen
 	if (checkDraw()) {
-		while (accRow < 15 && accCol < 15 && !m_board.isEmpty(accRow, accCol)) {
+		while (accRow < 15 && accCol < 15 && accRow >= 0 && accCol >= 0 && !m_board.isEmpty(accRow, accCol)) {
 			int letterValue = m_board.getTileValue(accRow, accCol);
 
 			m_drawPlacementsFull.push_back({ accRow, accCol });	//Alle Steine in Wort speichern (für Lernfunktion)
@@ -672,7 +678,7 @@ int Game::DrawScore() {
 		if (checkDraw()) {
 			//Sekundäre Richtung (vertikal) durchlaufen
 			if (secondaryDirectionVertical) {
-				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !m_board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
+				while (secondaryAccRow < 15 && secondaryAccCol < 15 && accRow >= 0 && accCol >= 0 && !m_board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !m_board.isEmpty(secondaryAccRow - 1, secondaryAccCol)) {
 					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
 
 					m_drawPlacementsFull.push_back({secondaryAccRow, secondaryAccCol});
@@ -697,7 +703,7 @@ int Game::DrawScore() {
 			}
 			//Sekundäre Richtung (horizontal) durchlaufen
 			else {
-				while (secondaryAccRow < 15 && secondaryAccCol < 15 && !m_board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !m_board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
+				while (secondaryAccRow < 15 && secondaryAccCol < 15 && accRow >= 0 && accCol >= 0 && !m_board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !m_board.isEmpty(secondaryAccRow, secondaryAccCol - 1)) {
 					int letterValue = m_board.getTileValue(secondaryAccRow, secondaryAccCol);
 
 					m_drawPlacementsFull.push_back({secondaryAccRow, secondaryAccCol});

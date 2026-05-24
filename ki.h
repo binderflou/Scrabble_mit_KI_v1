@@ -24,4 +24,7 @@ public:
 	int simulateScore(const std::vector<PlacementKi>& placements, Board& board, std::string word);
 	bool checkSimulatedMove(const std::vector<PlacementKi>& placements, Board& board, int row, int col);
 	int getSimulatedTileScore(const std::vector<PlacementKi>& placements, int row, int col);
+	bool isStartPointHorizontal(const Board& board, int row, int col);
+	bool isStartPointVertical(const Board& board, int row, int col);
+	bool connected(std::vector<PlacementKi>& placements, Board& board);
 };

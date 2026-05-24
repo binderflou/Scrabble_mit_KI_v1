@@ -15,26 +15,42 @@ std::vector<Move> Ki::calculateBestMove(Board& board, std::set<std::string>& dic
 
 	for (int r = 0; r < 15; r++) {
 		for (int c = 0; c < 15; c++) {
+#if 0
 			if (isStartPoint(board, r, c)) {
 
-				//In beide Richtungen suchen
-				for (int i = 1; i <= 4; i++) {
-					if (c - i >= 0 && !board.isEmpty(r, c - i)) {
-						std::vector<PlacementKi> currentPlacements;
-						findWord(r, c - i, "", dictionary, hand, currentPlacements, board, true);
-					}
-				}
-				for (int i = 1; i <= 4; i++) {
-					if (r - i >= 0 && !board.isEmpty(r - i, c)) {
-						std::vector<PlacementKi> currentPlacements;
-						findWord(r - i, c, "", dictionary, hand, currentPlacements, board, false);
-					}
-				}
-				/*
 				std::vector<PlacementKi> currentPlacements;
 				findWord(r, c, "", dictionary, hand, currentPlacements, board, true);
 				findWord(r, c, "", dictionary, hand, currentPlacements, board, false);
+
+				/*
+				//In beide Richtungen suchen
+				for (int i = 1; i <= 7; i++) {
+					if (c - i >= 0 && !board.isEmpty(r, c - i)) {
+						//std::vector<PlacementKi> currentPlacements;
+						findWord(r, c - i, "", dictionary, hand, currentPlacements, board, true);
+					}
+				}
+				for (int i = 1; i <= 7; i++) {
+					if (r - i >= 0 && !board.isEmpty(r - i, c)) {
+						//std::vector<PlacementKi> currentPlacements;
+						findWord(r - i, c, "", dictionary, hand, currentPlacements, board, false);
+					}
+				}
 				*/
+			}
+#endif
+			if (isStartPointHorizontal(board, r, c)) {
+				std::vector<PlacementKi> currentPlacements;
+				findWord(r, c, "", dictionary, hand, currentPlacements, board, true);
+			}
+			if (isStartPointVertical(board, r, c)) {
+				std::vector<PlacementKi> currentPlacements;
+				findWord(r, c, "", dictionary, hand, currentPlacements, board, false);
+			}
+			if (isStartPoint(board, r, c)) {
+				std::vector<PlacementKi> currentPlacements;
+				findWord(r, c, "", dictionary, hand, currentPlacements, board, true);
+				findWord(r, c, "", dictionary, hand, currentPlacements, board, false);
 			}
 		}
 	}
@@ -58,10 +74,78 @@ bool Ki::isStartPoint(const Board& board, int row, int col) {
 	return false;
 }
 
+//Für Beginn weiter links
+bool Ki::isStartPointHorizontal(const Board& board, int row, int col) {
+	if (!board.isEmpty(row, col)) {
+		return false;
+	}
+
+	int counter = 0;
+
+	for (int c = col; c < 15; c++) {
+		if (!board.isEmpty(row, c)) {
+			return true;
+		}
+		if ((row > 0 && !board.isEmpty(row - 1, c)) ||
+			(row < 14 && !board.isEmpty(row + 1, c)) ||
+			(c < 14 && !board.isEmpty(row, c + 1))) {
+			return true;
+		}
+		counter++;
+		if (counter >= 7) {
+			return false;
+		}
+	}
+	return false;
+}
+
+//Für Beginn weiter oben
+bool Ki::isStartPointVertical(const Board& board, int row, int col) {
+	if (!board.isEmpty(row, col)) {
+		return false;
+	}
+
+	int counter = 0;
+
+	for (int r = row; r < 15; r++) {
+		if (!board.isEmpty(r, col)) {
+			return true;
+		}
+		if ((col > 0 && !board.isEmpty(r, col - 1)) ||
+			(col < 14 && !board.isEmpty(r, col + 1)) ||
+			(r < 14 && !board.isEmpty(r + 1, col))) {
+			return true;
+		}
+		counter++;
+		if (counter >= 7) {
+			return false;
+		}
+	}
+	return false;
+}
+
+//Hilfsfunktion um zu überprüfen, ob die neuen Steine mit bereits liegenden Steinen verbunden sind (außer erstes Wort)
+bool Ki::connected(std::vector<PlacementKi>& placements, Board& board) {
+	if (board.isEmpty(7, 7)) {
+		return true;
+	}
+	for (const auto& placement : placements) {
+		int row = placement.row;
+		int col = placement.col;
+		if ((row > 0 && !board.isEmpty(row - 1, col)) ||
+			(row < 14 && !board.isEmpty(row + 1, col)) ||
+			(col > 0 && !board.isEmpty(row, col - 1)) ||
+			(col < 14 && !board.isEmpty(row, col + 1))) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Ki::findWord(int row, int col, std::string currentWord, std::set<std::string>& dictionary, std::vector<Tile> hand, std::vector<PlacementKi> currentPlacements, Board& board, bool isHorizontal) {
 	//Abbruch Spielfeldrand
 	if (row >= 15 || col >= 15) {
-		if (dictionary.count(currentWord) && !currentPlacements.empty()) {
+		if (dictionary.count(currentWord) && !currentPlacements.empty() && connected(currentPlacements, board)) {
 			Move move;
 			move.word = currentWord;
 			move.placements = currentPlacements;
@@ -70,8 +154,10 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 		}
 		return;
 	}
+
 	//Einlesen bereits liegender Steine
-	if (currentWord == "") {
+	if (currentWord.empty()) {
+
 		if (isHorizontal) {
 			while (col > 0 && !board.isEmpty(row, col - 1)) {
 				col--;
@@ -105,11 +191,11 @@ void Ki::findWord(int row, int col, std::string currentWord, std::set<std::strin
 		int nextCol = col + (isHorizontal ? 1 : 0);
 
 		findWord(nextRow, nextCol, nextWord, dictionary, hand, currentPlacements, board, isHorizontal);
-	return;
+		return;
 	}
 	
 	//Wort in Vektor für mögliche Züge legen
-	if (dictionary.count(currentWord) && !currentPlacements.empty()) {
+	if (dictionary.count(currentWord) && !currentPlacements.empty() && connected(currentPlacements, board)) {
 		Move move;
 		move.word = currentWord;
 		move.placements = currentPlacements;
@@ -347,7 +433,7 @@ int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, 
 
 		//Sekundäre Richtung (vertikal) durchlaufen
 		if (secondaryDirectionVertical) {
-			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !board.isEmpty(secondaryAccRow - 1, secondaryAccCol)
+			while (secondaryAccRow < 15 && secondaryAccCol < 15 && secondaryAccRow >= 0 && secondaryAccCol >= 0 && !board.isEmpty(secondaryAccRow + 1, secondaryAccCol) || !board.isEmpty(secondaryAccRow - 1, secondaryAccCol)
 				|| checkSimulatedMove(placements, board, secondaryAccRow + 1, secondaryAccCol) || checkSimulatedMove(placements, board, secondaryAccRow - 1, secondaryAccCol)) {
 				int letterValue = 0;
 				if (!board.isEmpty(secondaryAccRow, secondaryAccCol)) {
@@ -376,7 +462,7 @@ int Ki::simulateScore(const std::vector<PlacementKi>& placements, Board& board, 
 		}
 		//Sekundäre Richtung (horizontal) durchlaufen
 		else {
-			while (secondaryAccRow < 15 && secondaryAccCol < 15 && !board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !board.isEmpty(secondaryAccRow, secondaryAccCol - 1)
+			while (secondaryAccRow < 15 && secondaryAccCol < 15 && secondaryAccRow >= 0 && secondaryAccCol >= 0 && !board.isEmpty(secondaryAccRow, secondaryAccCol + 1) || !board.isEmpty(secondaryAccRow, secondaryAccCol - 1)
 				|| checkSimulatedMove(placements, board, secondaryAccRow, secondaryAccCol + 1) || checkSimulatedMove(placements, board, secondaryAccRow, secondaryAccCol - 1)) {
 				int letterValue = 0;
 				if (!board.isEmpty(secondaryAccRow, secondaryAccCol)) {
