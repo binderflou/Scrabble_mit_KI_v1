@@ -883,7 +883,17 @@ bool Game::KiMove(Ki* ki) {
 	Move bestMove = possibleWords[0];
 
 	for (auto& placement : bestMove.placements) {
-		Tile tile = ki->takeTile(placement.tile.letter);
+		Tile tile;
+		//Joker
+		if (placement.tile.value == 0) {
+			tile = ki->takeTile("_");
+			tile.letter = placement.tile.letter;
+		}
+		//Standard
+		else {
+			tile = ki->takeTile(placement.tile.letter);
+		}
+		
 		Tile* tilePtr = new Tile(tile);
 		m_board.placeTile(tilePtr, placement.row, placement.col);
 		m_drawPlacements.push_back({ placement.row, placement.col });
