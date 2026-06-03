@@ -250,6 +250,12 @@ int Game::draw() {
 			std::cout << "Eingabe getrennt durch ','!\n";
 			std::cout << "mit 'Enter' abschließen\n";
 
+			if (m_bag.isEmpty()) {
+				std::cout << "Beutel ist leer, Tauschen nicht möglich";
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				return 0;
+			}
+
 			//Einlesen, Leerzeichen entfernen, Aufteilen in Vektor 
 			std::getline(std::cin >> std::ws, _inputString);
 			_inputString.erase(std::remove(_inputString.begin(), _inputString.end(), ' '), _inputString.end());
@@ -739,6 +745,7 @@ int Game::DrawScore() {
 
 		m_players[m_activePlayer]->setScore(oldScore + totalScore);
 		std::cout << "Punkte für diesen Zug: " << totalScore << "\n";
+		std::this_thread::sleep_for(std::chrono::seconds(2));
 
 		isFirstTurn = false;
 		
@@ -815,7 +822,7 @@ void Game::learnWord() {
 
 	m_drawPlacementsFull.clear();
 
-	if (word.empty() || m_wordsFromFile.find(word) != m_wordsFromFile.end()) {
+	if (word.empty() || m_wordsFromFile.find(word) != m_wordsFromFile.end() || word.size() < 2) {
 		return;
 	}
 	//Abfragen ob Wort erlernt werden soll

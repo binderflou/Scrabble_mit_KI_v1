@@ -34,6 +34,10 @@ Tile Player::takeTile(std::string letter) {
 }
 
 void Player::drawTiles(Bag& bag) {
+	if (bag.isEmpty()) {
+		std::cout << "Beutel ist leer";
+		return;
+	}
 	while (m_hand.size() < MAX_HAND && !bag.isEmpty()) {
 		m_hand.push_back(bag.drawTile());
 	}
