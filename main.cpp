@@ -52,12 +52,12 @@ int main() {
 
 		case MainCase::MainMenu:
 			system("cls");
-			std::cout << "			─────────────────\n" << "			│   Hauptmenü   │\n" << "			─────────────────\n";
+			std::cout << "			┌───────────────┐\n" << "			│   Hauptmenü   │\n" << "			└───────────────┘\n";
 			std::cout << "Aktuelle Spielerzahl: " << numberOfPlayers << "\n\n";
 			std::cout << "Wählen Sie eine Aktion:\n";
-			std::cout << "────────────────────\n" << "│ 1: Einstellungen │\n" << "────────────────────\n";
-			std::cout << "────────────────────\n" << "│ 2: Spiel starten │\n" << "────────────────────\n";
-			std::cout << "────────────────────\n" << "│ 3: Beenden	   │\n" << "────────────────────\n";
+			std::cout << "┌──────────────────┐\n" << "│ 1: Einstellungen │\n" << "└──────────────────┘\n";
+			std::cout << "┌──────────────────┐\n" << "│ 2: Spiel starten │\n" << "└──────────────────┘\n";
+			std::cout << "┌──────────────────┐\n" << "│ 3: Beenden	   │\n" << "└──────────────────┘\n";
 
 			std::cin >> input;
 

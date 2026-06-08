@@ -52,24 +52,24 @@ void Player::displayHand() const {
 	std::cout << "\n";
 	std::cout << m_name << ":							" << "Punkte: " << m_score << "\n";
 	for (const auto& tile : m_hand) {
-		std::cout << "────── ";
+		std::cout << "┌─────┐ ";
 	}
 	std::cout << std::endl;
 
 	for (const auto& tile : m_hand) {
-		std::cout << "│" << tile.letter << "   │ ";
+		std::cout << "│" << tile.letter << "    │ ";
 	}
 	std::cout << std::endl;
 	for (const auto& tile : m_hand) {
 		if (tile.value < 10) {
-			std::cout << "│   " << tile.value << "│ ";
+			std::cout << "│    " << tile.value << "│ ";
 		}
-		else { std::cout << "│  " << tile.value << "│ "; }
+		else { std::cout << "│   " << tile.value << "│ "; }
 	}
 	std::cout << std::endl;
 
 	for (const auto& tile : m_hand) {
-		std::cout << "────── ";
+		std::cout << "└─────┘ ";
 	}
 	std::cout << "\n";
 }
